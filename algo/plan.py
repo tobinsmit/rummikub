@@ -11,10 +11,10 @@ class Plan():
             for tile in group:
                 num = tile[0]
                 if type(tile[1]) == str:
-                    color = rules.colorStringMap.index(tile[1])
+                    suit = rules.suitStringMap.index(tile[1])
                 else:
-                    color = int(tile[1])
-                self.group_list[-1].append((num, color))
+                    suit = int(tile[1])
+                self.group_list[-1].append((num, suit))
 
 
     def __str__(self):
@@ -25,7 +25,7 @@ class Plan():
                 s = s + ',\n '
             s = s + '['
             for j, tile in enumerate(group):
-                s = s + f'({tile[0]:>2}, {rules.colorStringMap[tile[1]]})'
+                s = s + f'({tile[0]:>2}, {rules.suitStringMap[tile[1]]})'
                 if j < len(group)-1:
                     s = s + ', '
             s = s + ']'
@@ -44,37 +44,37 @@ class Plan():
                 print('Group too short')
             return False
 
-        numbersList = [tile[0] for tile in group]
-        colorsList = [tile[1] for tile in group]
-        numbersSet = set(numbersList)
-        colorsSet = set(colorsList)
+        ranksList = [tile[0] for tile in group]
+        suitsList = [tile[1] for tile in group]
+        ranksSet = set(ranksList)
+        suitsSet = set(suitsList)
 
-        isGroupOfNumbers = len(numbersSet) > 1
-        isGroupOfColors = len(colorsSet) > 1
+        isGroupOfranks = len(ranksSet) > 1
+        isGroupOfsuits = len(suitsSet) > 1
 
-        if isGroupOfNumbers and isGroupOfColors:
+        if isGroupOfranks and isGroupOfsuits:
             if verbose:
-                print('Number group and color group')
+                print('rank group and suit group')
             return False
         
-        if isGroupOfNumbers:
-            # Check numbers are consecutive
-            sortedNumbers = np.sort(numbersList)
-            sortedNumbersDiff = np.diff(sortedNumbers)
-            if not np.all(sortedNumbersDiff == 1):
+        if isGroupOfranks:
+            # Check ranks are consecutive
+            sortedranks = np.sort(ranksList)
+            sortedranksDiff = np.diff(sortedranks)
+            if not np.all(sortedranksDiff == 1):
                 if verbose:
-                    print('Number group not consecutive')
+                    print('rank group not consecutive')
                 return False
 
-        if isGroupOfColors:
-            if len(colorsSet) != len(group):
+        if isGroupOfsuits:
+            if len(suitsSet) != len(group):
                 if verbose:
-                    print('Repeated colors')
+                    print('Repeated suits')
                 return False
 
         return True
 
-    def find_tile_add_to_group_options(self, color_idx, number_idx):
+    def find_tile_add_to_group_options(self, rank, suit):
         # TODO
         return []
 
@@ -82,15 +82,15 @@ def test_plan_class():
     def unit_test_valid(group_list, is_valid, error_msg):
         assert Plan(group_list).is_valid() == is_valid, error_msg
         
-    assert Plan([[(6, 'Red'), (7, 'Red'), (8, 'Red')]]).is_valid() == True, 'Does not work for normal group of numbers'
-    assert Plan([[(10, 'Blu'), (10, 'Red'), (10, 'Blk')]]).is_valid() == True, 'Does not work for normal group of colors'
-    assert Plan([[(6, 'Red'), (7, 'Red'), (9, 'Red')]]).is_valid() == False, 'Does not catch gap in group of numbers'
-    assert Plan([[(6, 'Red'), (7, 'Red'), (8, 'Blu')]]).is_valid() == False, 'Does not catch group with multiple numbers and multiple colors'
-    assert Plan([[(6, 'Red'), (6, 'Red'), (7, 'Red')]]).is_valid() == False, 'Does not catch number group with double ups'
-    assert Plan([[(10, 'Red'), (10, 'Red'), (10, 'Blk')]]).is_valid() == False, 'Does not catch color group with double ups'
-    assert Plan([[(10, 'Red'), (10, 'Blk')]]).is_valid() == False, 'Does not catch color group with two tiles'
-    assert Plan([[(6, 'Red'), (7, 'Red')]]).is_valid() == False, 'Does not catch number group with two tiles'
-    assert Plan([[(num, 'Red') for num in rules.numberOptions]]).is_valid() == True, 'Does not allow large number group'
+    assert Plan([[(6, 'Red'), (7, 'Red'), (8, 'Red')]]).is_valid() == True, 'Does not work for normal group of ranks'
+    assert Plan([[(10, 'Blu'), (10, 'Red'), (10, 'Blk')]]).is_valid() == True, 'Does not work for normal group of suits'
+    assert Plan([[(6, 'Red'), (7, 'Red'), (9, 'Red')]]).is_valid() == False, 'Does not catch gap in group of ranks'
+    assert Plan([[(6, 'Red'), (7, 'Red'), (8, 'Blu')]]).is_valid() == False, 'Does not catch group with multiple ranks and multiple suits'
+    assert Plan([[(6, 'Red'), (6, 'Red'), (7, 'Red')]]).is_valid() == False, 'Does not catch rank group with double ups'
+    assert Plan([[(10, 'Red'), (10, 'Red'), (10, 'Blk')]]).is_valid() == False, 'Does not catch suit group with double ups'
+    assert Plan([[(10, 'Red'), (10, 'Blk')]]).is_valid() == False, 'Does not catch suit group with two tiles'
+    assert Plan([[(6, 'Red'), (7, 'Red')]]).is_valid() == False, 'Does not catch rank group with two tiles'
+    assert Plan([[(num, 'Red') for num in rules.ranks]]).is_valid() == True, 'Does not allow large rank group'
     
     assert Plan([
         [(6, 'Red'), (7, 'Red'), (8, 'Red')],

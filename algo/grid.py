@@ -6,7 +6,7 @@ class Grid():
         assert tiles or plan
         assert not (tiles and plan)
 
-        self.matrix = np.zeros(shape=[len(rules.colorOptions), len(rules.numberOptions)], dtype=int)
+        self.matrix = np.zeros(shape=[len(rules.ranks), len(rules.suits)], dtype=int)
 
         if plan:
             tiles = []
@@ -15,49 +15,51 @@ class Grid():
                     tiles.append(tile)
 
         for tile in tiles:
-            number_idx = tile[0]
             if type(tile[1]) == str:
-                color_idx = rules.colorStringMap.index(tile[1])
+                suit = rules.suitStringMap.index(tile[1])
             else:
-                color_idx = tile[1]
-            self.matrix[color_idx, number_idx] += 1
+                suit = tile[1]
+            rank = tile[0]
+            self.matrix[rank, suit] += 1
 
-    def check_kernels_match(self, kernel_indexes, color_idx, number_idx):
+    def check_kernels_match(self, kernel_indexes, rank, suit):
         kernel = np.sum([self.kernels[k] for k in kernel_indexes], 0)
-        for kernel_row in range(len(kernel)):
-            for kernel_col in range(len(kernel[0])):
-                kernel_val = kernel[kernel_row, kernel_col]
+        for kernel_rank in range(len(kernel)):
+            for kernel_suit in range(len(kernel[0])):
+                kernel_val = kernel[kernel_rank, kernel_suit]
                 if kernel_val > 0:
-                    matrix_row = (kernel_row + color_idx) % len(rules.colorOptions)
+                    # TODO make this work and make tests
                     if rules.loop13to1:
-                        matrix_col = (kernel_col - 2 + number_idx) % len(rules.numberOptions)
+                        matrix_rank = (kernel_rank - 2 + rank) % len(rules.ranks)
                     else:
-                        matrix_col = (kernel_col - 2 + number_idx)
-                        if matrix_col < 0 or matrix_col >= len(rules.numberOptions):
+                        matrix_rank = (kernel_rank - 2 + rank)
+                        if matrix_rank < 0 or matrix_rank >= len(rules.ranks):
                             continue
-                    matrix_val = self.matrix[matrix_row, matrix_col]
+                    matrix_suit = (kernel_suit + suit) % len(rules.suits)
+                    matrix_val = self.matrix[matrix_rank, matrix_suit]
                     if matrix_val < kernel_val:
                         return False
         
         return True
 
-    def kernel_to_group_option(self, kernel_idx, color_idx, number_idx):
+    def kernel_to_group_option(self, kernel_idx, rank, suit):
         kernel = self.kernels[kernel_idx]
         group = []
         new_matrix = np.array(self.matrix, copy=True)
-        for kernel_row in range(len(kernel)):
-            for kernel_col in range(len(kernel[0])):
-                kernel_val = kernel[kernel_row, kernel_col]
+        for kernel_rank in range(len(kernel)):
+            for kernel_suit in range(len(kernel[0])):
+                kernel_val = kernel[kernel_rank, kernel_suit]
                 if kernel_val > 0:
-                    matrix_row = (kernel_row + color_idx) % len(rules.colorOptions)
+                    # TODO make this work and make tests
                     if rules.loop13to1:
-                        matrix_col = (kernel_col - 2 + number_idx) % len(rules.numberOptions)
+                        matrix_rank = (kernel_rank - 2 + rank) % len(rules.ranks)
                     else:
-                        matrix_col = (kernel_col - 2 + number_idx)
-                        if matrix_col < 0 or matrix_col >= len(rules.numberOptions):
+                        matrix_rank = (kernel_rank - 2 + rank)
+                        if matrix_rank < 0 or matrix_rank >= len(rules.ranks):
                             raise Exception('Going around the bend but shouldnt')
-                    group.append((matrix_col, matrix_row))
-                    new_matrix[matrix_row, matrix_col] -= 1
+                    matrix_suit = (kernel_suit + suit) % len(rules.suits)
+                    group.append((matrix_rank, matrix_suit))
+                    new_matrix[matrix_rank, matrix_suit] -= 1
         option = {
             'type': 'new_group',
             'group': group,
@@ -66,54 +68,60 @@ class Grid():
         return option
 
 
-    def find_tile_new_group_options(self, color_idx, number_idx):
+    def find_tile_new_group_options(self, rank, suit):
         options = []
         for kernel_idx in range(len(self.kernels)):
-            works = self.check_kernels_match([kernel_idx], color_idx, number_idx)
+            works = self.check_kernels_match([kernel_idx], rank, suit)
             if works:
-                option = self.kernel_to_group_option(kernel_idx, color_idx, number_idx)
+                option = self.kernel_to_group_option(kernel_idx, rank, suit)
                 options.append(option)        
         return options
         
+    # TODO update kernels to reflect change in axes
     kernels = np.array([
         [
-            [1,1,1,0,0],
-            [0,0,0,0,0],
-            [0,0,0,0,0],
-            [0,0,0,0,0],
+            [1, 0, 0, 0],
+            [1, 0, 0, 0],
+            [1, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
         ],
         [
-            [0,1,1,1,0],
-            [0,0,0,0,0],
-            [0,0,0,0,0],
-            [0,0,0,0,0],
+            [0, 0, 0, 0],
+            [1, 0, 0, 0],
+            [1, 0, 0, 0],
+            [1, 0, 0, 0],
+            [0, 0, 0, 0]
         ],
         [
-            [0,0,1,1,1],
-            [0,0,0,0,0],
-            [0,0,0,0,0],
-            [0,0,0,0,0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [1, 0, 0, 0],
+            [1, 0, 0, 0],
+            [1, 0, 0, 0]
         ],
         [
-            [0,0,1,0,0],
-            [0,0,0,0,0],
-            [0,0,1,0,0],
-            [0,0,1,0,0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [1, 0, 1, 1],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
         ],
         [
-            [0,0,1,0,0],
-            [0,0,1,0,0],
-            [0,0,0,0,0],
-            [0,0,1,0,0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [1, 1, 0, 1],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
         ],
         [
-            [0,0,1,0,0],
-            [0,0,1,0,0],
-            [0,0,1,0,0],
-            [0,0,0,0,0],
-        ],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [1, 1, 1, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
+        ]
     ])
-
 
 def test_check_kernels_match():
     g = Grid(tiles=[

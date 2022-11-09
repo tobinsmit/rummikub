@@ -9,17 +9,17 @@ class Game():
         self.original_grid = Grid(tiles=tiles)
         self.plan = Plan()
 
-    def find_tile_options(self, color_idx, number_idx):
-        new_group_options = self.grid.find_tile_new_group_options(color_idx, number_idx)
-        grid_to_plan_options = self.plan.find_tile_add_to_group_options(color_idx, number_idx)
+    def find_tile_options(self, rank, suit):
+        new_group_options = self.grid.find_tile_new_group_options(rank, suit)
+        grid_to_plan_options = self.plan.find_tile_add_to_group_options(rank, suit)
         return [*new_group_options, *grid_to_plan_options]
         
     def solve(self):
         fresh_changes = True
         while fresh_changes:
-            for number in rules.numberOptions:
-                for color in rules.colorOptions:
-                    tiles_unplaced = self.grid.matrix[color, number]
+            for rank in rules.ranks:
+                for suit in rules.suits:
+                    tiles_unplaced = self.grid.matrix[rank, suit]
                     if tiles_unplaced == 0:
                         continue
                     elif tiles_unplaced < 0:
@@ -27,7 +27,7 @@ class Game():
                     elif tiles_unplaced > 2:
                         raise Exception()
                     
-                    options = self.find_tile_options(number_idx=number, color_idx=color)
+                    options = self.find_tile_options(rank, suit)
 
                     if len(options) == 0:
                         raise Exception('Tile has no options')
