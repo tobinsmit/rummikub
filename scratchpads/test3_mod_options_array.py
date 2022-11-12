@@ -3,18 +3,13 @@ def inc_or_double_to_100(routes):
     for route in routes:
         # print('\troute', route)
         x = route[-1]
-
-        x_double = 2*x
-        if x_double == 100:
-            return [*route, x_double]
-        elif x_double < 100:
-            routes.append([*route, x_double])
-
-        x_inc = x + 1
-        if x_inc == 100:
-            return [*route, x_inc]
-        elif x_inc < 100:
-            routes.append([*route, x_inc])
+        options = [2*x, x+1]
+        for option in options:
+            new_route = [*route, option]
+            if option == 100:
+                return new_route
+            elif option < 100:
+                routes.append(new_route)
 
 
 

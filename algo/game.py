@@ -3,7 +3,7 @@ import rules
 from plan import Plan
 from grid import Grid
 
-class Game():
+class Board():
     def __init__(self, tiles):
         self.grid = Grid(tiles=tiles)
         self.original_grid = Grid(tiles=tiles)
@@ -14,7 +14,7 @@ class Game():
         grid_to_plan_options = self.plan.find_tile_add_to_group_options(rank, suit)
         return [*new_group_options, *grid_to_plan_options]
         
-    def solve(self):
+    def simplify(self):
         fresh_changes = True
         while fresh_changes:
             for rank in rules.ranks:
@@ -35,16 +35,29 @@ class Game():
                         # All options must be true
                         for option in options:
                             # Enact option
-                            #TODO
+                            # TODO this
                             pass
                             
                         fresh_changes = True
                         
+    def solve(self):
+         # TODO implement all this:
+        routes =[[self]]
+        for route in routes:
+            board = route[-1]
+            board.simplify()
+            options = board.find_move_options()
+            for option in options:
+                new_route = [*route, option.move, option.new_board]
+                if option.new_board.is_done:
+                    return new_route
+                else:
+                    routes.append(new_route)
 
 if __name__ == '__main__':
-    game = Game(tiles=[
+    board = Board(tiles=[
         (6,'Red'),
         (7,'Blk'),
         (8,'Blk'),
     ])
-    game.solve()
+    board.simplify()
