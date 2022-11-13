@@ -7,7 +7,7 @@ def inc_or_double_to_100(x, verbose=False):
     all_routes = [[x]]
 
     def vprint(*args):
-        ''' If verbose, prints args'''
+        ''' If verbose, prints args '''
         if verbose:
             print(*args)
 

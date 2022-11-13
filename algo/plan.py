@@ -3,24 +3,24 @@ import numpy as np
 import rules
 
 class Plan():
-    def __init__(self, group_list=[]):
+    def __init__(self, p_in=[]):
         # String to enum
-        self.group_list = []
-        for group in group_list:
-            self.group_list.append([])
+        self.p = []
+        for group in p_in:
+            self.p.append([])
             for tile in group:
                 num = tile[0]
                 if type(tile[1]) == str:
                     suit = rules.suitStringMap.index(tile[1])
                 else:
                     suit = int(tile[1])
-                self.group_list[-1].append((num, suit))
+                self.p[-1].append((num, suit))
 
 
     def __str__(self):
-        # return str(self.group_list)
+        # return str(self.p)
         s = '['
-        for i, group in enumerate(self.group_list):
+        for i, group in enumerate(self.p):
             if i:
                 s = s + ',\n '
             s = s + '['
@@ -33,7 +33,7 @@ class Plan():
         return s
 
     def is_valid(self, verbose=False):
-        for group in self.group_list:
+        for group in self.p:
             if not Plan.is_group_valid(group):
                 return False
         return True
@@ -49,24 +49,24 @@ class Plan():
         ranksSet = set(ranksList)
         suitsSet = set(suitsList)
 
-        isGroupOfranks = len(ranksSet) > 1
-        isGroupOfsuits = len(suitsSet) > 1
+        isGroupOfRanks = len(ranksSet) > 1
+        isGroupOfSuits = len(suitsSet) > 1
 
-        if isGroupOfranks and isGroupOfsuits:
+        if isGroupOfRanks and isGroupOfSuits:
             if verbose:
                 print('rank group and suit group')
             return False
         
-        if isGroupOfranks:
+        if isGroupOfRanks:
             # Check ranks are consecutive
-            sortedranks = np.sort(ranksList)
-            sortedranksDiff = np.diff(sortedranks)
-            if not np.all(sortedranksDiff == 1):
+            sortedRanks = np.sort(ranksList)
+            sortedRanksDiff = np.diff(sortedRanks)
+            if not np.all(sortedRanksDiff == 1):
                 if verbose:
                     print('rank group not consecutive')
                 return False
 
-        if isGroupOfsuits:
+        if isGroupOfSuits:
             if len(suitsSet) != len(group):
                 if verbose:
                     print('Repeated suits')
@@ -74,13 +74,30 @@ class Plan():
 
         return True
 
-    def find_tile_add_to_group_options(self, rank, suit):
-        # TODO
-        return []
+    def find_tile_add_to_group_moves(self, rank, suit):
+        options = []
+        for group in self.p:
+            new_group = [*group, (rank, suit)]
+            res = Plan.is_group_valid(new_group)
+            if res:
+                new_p = self.p
+                i = self.p.index(group)
+                new_p[i] = new_group
+                option = {
+                    'type': 'add_to_group',
+                    'old_group': group,
+                    'new_group': new_group,
+                    'new_plan': new_p,
+                    'rank': rank,
+                    'suit': suit,
+                }
+                options.append(option)
+
+        return options
 
 def test_plan_class():
-    def unit_test_valid(group_list, is_valid, error_msg):
-        assert Plan(group_list).is_valid() == is_valid, error_msg
+    def unit_test_valid(p, is_valid, error_msg):
+        assert Plan(p).is_valid() == is_valid, error_msg
         
     assert Plan([[(6, 'Red'), (7, 'Red'), (8, 'Red')]]).is_valid() == True, 'Does not work for normal group of ranks'
     assert Plan([[(10, 'Blu'), (10, 'Red'), (10, 'Blk')]]).is_valid() == True, 'Does not work for normal group of suits'
