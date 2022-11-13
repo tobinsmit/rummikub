@@ -3,8 +3,8 @@ import rules
 
 class Grid():
     def __init__(self, tiles=None, plan=None):
-        assert tiles or plan
-        assert not (tiles and plan)
+        assert (tiles is not None) or (plan is not None)
+        assert not ((tiles is not None) and (plan is not None))
 
         self.matrix = np.zeros(shape=[len(rules.ranks), len(rules.suits)], dtype=int)
 
@@ -155,6 +155,8 @@ def test_check_kernels_match():
     assert not g.check_kernels_match([3], 6, 3)
     assert not g.check_kernels_match([4], 6, 3)
     assert not g.check_kernels_match([5], 6, 3)
+    assert not g.check_kernels_match([5], 12, 3) # Out of bounds
+
     move = g.kernel_to_group_option(5,6,0)
     group = move['group']
     assert set(group) == set([(6,1),(6,2),(6,0)])

@@ -1,21 +1,38 @@
-print('importing numpy')
 import numpy as np
-print('importing rules')
 import rules
-print('importing Plan')
 from plan import Plan
-print('importing Grid')
 from grid import Grid
 
 class Board():
     def __init__(self, tiles):
         self.grid = Grid(tiles=tiles)
-        self.original_grid = Grid(tiles=tiles)
         self.plan = Plan()
 
     def find_tile_moves(self, rank, suit):
         new_group_moves = self.grid.find_tile_new_group_moves(rank, suit)
         add_to_group_moves = self.plan.find_tile_add_to_group_moves(rank, suit)
+
+        for move in new_group_moves:
+            group = move['group']
+            new_plan = self.plan.p.copy()
+            new_plan.append(group)
+            move['new_plan'] = new_plan
+            new_board = Board(tiles=[])
+            new_board.plan.p = new_plan
+            new_board.grid.matrix = move['new_matrix']
+            move['new_board'] = new_board
+
+        for move in add_to_group_moves:
+            rank = move['rank']
+            suit = move['suit']
+            new_matrix = self.grid.matrix.copy()
+            new_matrix[rank, suit] -= 1
+            move['new_matrix'] = new_matrix
+            new_board = Board(tiles=[])
+            new_board.plan.p = move['new_plan']
+            new_board.grid.matrix = new_matrix
+            move['new_board'] = new_board
+
         return [*new_group_moves, *add_to_group_moves]
         
     def simplify(self):
@@ -78,24 +95,23 @@ class Board():
         routes = [[self]] 
         for route in routes:
             board = route[-1]
-            # print('board before simplify')
-            # print('board.is_done()', board.is_done())
-            # print(board.plan)
-            # print(board.grid.matrix)
             board.simplify()
-            # print('board after simplify')
-            # print('board.is_done()', board.is_done())
-            # print(board.plan)
-            # print(board.grid.matrix)
             if board.is_done():
+                print('simplify got it')
                 return board.plan
             choice = board.find_board_choice()
             for move in choice:
-                new_route = [*route, move.new_board]
-                if move.new_board.is_done:
-                    return move.new_board.plan
+                new_board = move['new_board']
+                new_route = [*route, new_board]
+                if new_board.is_done():
+                    print('one move got it')
+                    print(move)
+                    print(new_board.grid.matrix)
+                    return new_board.plan
                 else:
                     routes.append(new_route)
+        print('Damn didnt get it')
+        return None
 
     def is_done(self):
         return self.grid.matrix.sum() == 0
@@ -121,5 +137,6 @@ if __name__ == '__main__':
         (9,'Blk'),
         (9,'Blu'),
         (9,'Yel'),
+        (12,'Yel'),
     ])
     print(board.solve())
