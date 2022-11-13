@@ -34,7 +34,7 @@ class Grid():
                     else:
                         matrix_rank = (kernel_rank - 2 + rank)
                         if matrix_rank < 0 or matrix_rank >= len(rules.ranks):
-                            continue
+                            return False
                     matrix_suit = (kernel_suit + suit) % len(rules.suits)
                     matrix_val = self.matrix[matrix_rank, matrix_suit]
                     if matrix_val < kernel_val:
@@ -58,6 +58,10 @@ class Grid():
                     else:
                         matrix_rank = (kernel_rank - 2 + rank)
                         if matrix_rank < 0 or matrix_rank >= len(rules.ranks):
+                            print('kernel')
+                            print(kernel)
+                            print('rank', rank)
+                            print('suit', suit)
                             raise Exception('Going around the bend but shouldnt')
                     matrix_suit = (kernel_suit + suit) % len(rules.suits)
                     group.append((matrix_rank, matrix_suit))
@@ -132,6 +136,7 @@ def test_check_kernels_match():
         (6,0),
         (6,1),
         (6,2),
+        (12,'Yel'),
     ])
     assert g.check_kernels_match([2], 1, 0) # 1 and higher
     assert g.check_kernels_match([1], 2, 0) # 2 and sides
@@ -155,7 +160,7 @@ def test_check_kernels_match():
     assert not g.check_kernels_match([3], 6, 3)
     assert not g.check_kernels_match([4], 6, 3)
     assert not g.check_kernels_match([5], 6, 3)
-    assert not g.check_kernels_match([5], 12, 3) # Out of bounds
+    assert not g.check_kernels_match([2], 12, 3)
 
     move = g.kernel_to_group_option(5,6,0)
     group = move['group']

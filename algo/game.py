@@ -3,6 +3,9 @@ import rules
 from plan import Plan
 from grid import Grid
 
+class CantSolveTile(Exception):
+    pass
+
 class Board():
     def __init__(self, tiles):
         self.grid = Grid(tiles=tiles)
@@ -37,9 +40,12 @@ class Board():
         
     def simplify(self):
         print('simplifying')
+        print('\nboard')
+        print(self.plan)
+        print(self.grid.matrix)
         fresh_changes = True
         while fresh_changes:
-            print('\tsimplifying loopback')
+            print('simplifying loopback')
             fresh_changes = False
             for rank in rules.ranks:
                 for suit in rules.suits:
@@ -47,31 +53,43 @@ class Board():
                     if tiles_unplaced == 0:
                         continue
                     elif tiles_unplaced < 0:
-                        raise Exception()
+                        raise Exception('Gone into negative')
                     elif tiles_unplaced > 2:
-                        raise Exception()
+                        raise Exception('Too many of one number')
                     
                     moves = self.find_tile_moves(rank, suit)
 
                     if len(moves) == 0:
-                        raise Exception('Tile has no moves')
+                        raise CantSolveTile
                     elif len(moves) == tiles_unplaced:
                         # All moves must be true
                         for move in moves:
                             # Enact move
                             if move['type'] == 'new_group':
-                                group = move['group']
-                                new_matrix = move['new_matrix']
-                                self.plan.p.append(group)
-                                self.grid.matrix = new_matrix
+                                print('doing new group move')
+                                # group = move['group']
+                                # new_matrix = move['new_matrix']
+                                # self.plan.p.append(group)
+                                # self.grid.matrix = new_matrix
+                                new_board = move['new_board']
+                                self.grid.matrix = new_board.grid.matrix
+                                self.plan.p = new_board.plan.p
                             elif move['type'] == 'add_to_group':
-                                rank = move['rank']
-                                suit = move['suit']
-                                new_plan = move['new_plan']
-                                self.plan.p = new_plan
-                                self.grid.matrix[rank, suit] -= 1
+                                print('doing add to group move')
+                                # rank = move['rank']
+                                # suit = move['suit']
+                                # new_plan = move['new_plan']
+                                # self.plan.p = new_plan
+                                # self.grid.matrix[rank, suit] -= 1
+                                new_board = move['new_board']
+                                self.grid.matrix = new_board.grid.matrix
+                                self.plan.p = new_board.plan.p
                             else:
                                 raise Exception('Bad move type')
+
+                            print('new board')
+                            print(self.plan)
+                            print(self.grid.matrix)
 
                         fresh_changes = True
                         
@@ -99,6 +117,7 @@ class Board():
             if board.is_done():
                 print('simplify got it')
                 return board.plan
+            print('finding choices')
             choice = board.find_board_choice()
             for move in choice:
                 new_board = move['new_board']
@@ -110,6 +129,7 @@ class Board():
                     return new_board.plan
                 else:
                     routes.append(new_route)
+            print('going to next route')
         print('Damn didnt get it')
         return None
 
@@ -117,26 +137,85 @@ class Board():
         return self.grid.matrix.sum() == 0
 
 if __name__ == '__main__':
-    # board = Board(tiles=[
-    #     (6,'Blk'),
-    #     (7,'Blk'),
-    #     (8,'Blk'),
-    #     (9,'Blk'),
-    # ])
-    # print(board.solve())
-    board = Board(tiles=[
-        (6,'Red'),
-        (6,'Blk'),
-        (6,'Blu'),
-        (6,'Yel'),
-        (7,'Red'),
-        (7,'Yel'),
-        (8,'Red'),
-        (8,'Yel'),
-        (9,'Red'),
-        (9,'Blk'),
-        (9,'Blu'),
-        (9,'Yel'),
-        (12,'Yel'),
-    ])
-    print(board.solve())
+    if False:
+        board = Board(tiles=[
+            (6,'Blk'),
+            (7,'Blk'),
+            (8,'Blk'),
+            (9,'Blk'),
+        ])
+        print(board.solve())
+
+    if False:
+        board = Board(tiles=[
+            (6,'Red'),
+            (6,'Blk'),
+            (6,'Blu'),
+            (6,'Yel'),
+            (7,'Red'),
+            (7,'Yel'),
+            (8,'Red'),
+            (8,'Yel'),
+            (9,'Red'),
+            (9,'Blk'),
+            (9,'Blu'),
+            (9,'Yel'),
+            # (12,'Yel'),
+        ])
+        try:
+            print(board.solve())
+        except CantSolveTile:
+            print('cant solve it')
+
+    if True:
+        board = Board(tiles=[
+            (5, 'Red'),
+            (6, 'Red'),
+            (7, 'Red'),
+
+            (6, 'Red'),
+            (6, 'Blu'),
+            (6, 'Yel'),
+
+            (1, 'Red'),
+            (2, 'Red'),
+            (3, 'Red'),
+            (4, 'Red'),
+
+            (7, 'Red'),
+            (8, 'Red'),
+            (9, 'Red'),
+            (10, 'Red'),
+
+            (10, 'Red'),
+            (11, 'Red'),
+            (12, 'Red'),
+
+            (2, 'Yel'),
+            (3, 'Yel'),
+            (4, 'Yel'),
+            (5, 'Yel'),
+
+            (1, 'Blk'),
+            (2, 'Blk'),
+            (3, 'Blk'),
+            (4, 'Blk'),
+            (5, 'Blk'),
+            (6, 'Blk'),
+            (7, 'Blk'),
+
+            (4, 'Yel'),
+            (5, 'Yel'),
+            (6, 'Yel'),
+            (7, 'Yel'),
+
+            (9, 'Yel'),
+            (10, 'Yel'),
+            (11, 'Yel'),
+            (12, 'Yel'),
+
+            # More in Goodnotes pictures
+        ])
+        print(board.solve())
+        # except CantSolveTile:
+        #     print('cant solve it')
