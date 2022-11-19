@@ -1,4 +1,6 @@
 import numpy as np
+import json
+
 import rules
 from plan import Plan
 from grid import Grid
@@ -7,46 +9,62 @@ class CantSolveTile(Exception):
     pass
 
 class Board():
-    def __init__(self, tiles):
-        self.grid = Grid(tiles=tiles)
-        self.plan = Plan()
+    def __init__(self, tiles=None, data_str:(str or None)=None):
+        assert (tiles is not None) or (data_str is not None)
+        assert (tiles is None) or (data_str is None)
+
+        if tiles is not None:
+            self.grid = Grid(tiles=tiles)
+            self.plan = Plan()
+
+        if data_str is not None:
+            self.grid = Grid(tiles=[])
+            self.plan = Plan()
+            bd = json.loads(data_str)
+            self.plan.p = bd['plan']
+            self.grid.matrix = np.array(bd['spare_grid'], dtype=int)
 
     def find_tile_moves(self, rank, suit):
         new_group_moves = self.grid.find_tile_new_group_moves(rank, suit)
         add_to_group_moves = self.plan.find_tile_add_to_group_moves(rank, suit)
+        # print('new_group_moves', new_group_moves)
+        # print('add_to_group_moves', add_to_group_moves)
+        # print('matrix', self.grid.matrix)
+        # input('enter to continue')
 
         for move in new_group_moves:
+            print('found new group')
             group = move['group']
             new_plan = self.plan.p.copy()
             new_plan.append(group)
-            move['new_plan'] = new_plan
             new_board = Board(tiles=[])
-            new_board.plan.p = new_plan
-            new_board.grid.matrix = move['new_matrix']
-            move['new_board'] = new_board
+            new_board.plan.p = new_plan.copy()
+            new_board.grid.matrix = move['new_matrix'].copy()
+            move['new_board_data'] = new_board.data_str()
 
         for move in add_to_group_moves:
+            print('found add to group')
             rank = move['rank']
             suit = move['suit']
             new_matrix = self.grid.matrix.copy()
             new_matrix[rank, suit] -= 1
-            move['new_matrix'] = new_matrix
             new_board = Board(tiles=[])
             new_board.plan.p = move['new_plan']
-            new_board.grid.matrix = new_matrix
-            move['new_board'] = new_board
+            new_board.grid.matrix = new_matrix.copy()
+            move['new_board_data'] = new_board.data_str()
 
         return [*new_group_moves, *add_to_group_moves]
         
     def simplify(self):
-        print('simplifying')
-        print('\nboard')
-        print(self.plan)
-        print(self.grid.matrix)
+        print('\t' +'simplifying')
+        self.plan.print(tabs=2)
+        self.grid.print(tabs=2)
         fresh_changes = True
         while fresh_changes:
-            print('simplifying loopback')
             fresh_changes = False
+            # print('\nboard')
+            # print(self.plan)
+            # print(self.grid.matrix)
             for rank in rules.ranks:
                 for suit in rules.suits:
                     tiles_unplaced = self.grid.matrix[rank, suit]
@@ -66,33 +84,26 @@ class Board():
                         for move in moves:
                             # Enact move
                             if move['type'] == 'new_group':
-                                print('doing new group move')
-                                # group = move['group']
-                                # new_matrix = move['new_matrix']
-                                # self.plan.p.append(group)
-                                # self.grid.matrix = new_matrix
-                                new_board = move['new_board']
-                                self.grid.matrix = new_board.grid.matrix
-                                self.plan.p = new_board.plan.p
+                                print('\t\t' + 'doing new group move')
+                                data = json.loads(move['new_board_data'])
+                                self.grid.matrix = np.array(data['spare_grid'], dtype=int)
+                                self.plan.p = data['plan']
                             elif move['type'] == 'add_to_group':
-                                print('doing add to group move')
-                                # rank = move['rank']
-                                # suit = move['suit']
-                                # new_plan = move['new_plan']
-                                # self.plan.p = new_plan
-                                # self.grid.matrix[rank, suit] -= 1
-                                new_board = move['new_board']
-                                self.grid.matrix = new_board.grid.matrix
-                                self.plan.p = new_board.plan.p
+                                print('\t\t' + 'doing add to group move')
+                                data = json.loads(move['new_board_data'])
+                                self.grid.matrix = np.array(data['spare_grid'], dtype=int)
+                                self.plan.p = data['plan']
                             else:
                                 raise Exception('Bad move type')
 
-                            print('new board')
-                            print(self.plan)
-                            print(self.grid.matrix)
+                            print('\t\t\t' + 'new board')
+                            self.plan.print(tabs=4)
+                            self.grid.print(tabs=4)
 
                         fresh_changes = True
-                        
+
+            print('\t'+ 'simplifying loopback')
+            
     def find_board_choice(self):
         tile_moves = np.zeros(shape=[len(rules.ranks), len(rules.suits)], dtype=list)
         tile_moves_len = np.zeros(shape=[len(rules.ranks), len(rules.suits)], dtype=int)
@@ -120,14 +131,14 @@ class Board():
             print('finding choices')
             choice = board.find_board_choice()
             for move in choice:
-                new_board = move['new_board']
-                new_route = [*route, new_board]
+                new_board = Board(data_str=move['new_board_data'])
                 if new_board.is_done():
                     print('one move got it')
                     print(move)
                     print(new_board.grid.matrix)
                     return new_board.plan
                 else:
+                    new_route = [*route, new_board]
                     routes.append(new_route)
             print('going to next route')
         print('Damn didnt get it')
@@ -135,6 +146,13 @@ class Board():
 
     def is_done(self):
         return self.grid.matrix.sum() == 0
+
+    def data_str(self) -> str:
+        o  = dict()
+        o['spare_grid'] = self.grid.matrix.tolist()
+        o['plan'] = self.plan.p
+        s = json.dumps(o)
+        return s
 
 if __name__ == '__main__':
     if False:
@@ -169,53 +187,66 @@ if __name__ == '__main__':
 
     if True:
         board = Board(tiles=[
-            (5, 'Red'),
-            (6, 'Red'),
-            (7, 'Red'),
+            ( 5, 'Red'),
+            ( 6, 'Red'),
+            ( 7, 'Red'),
 
-            (6, 'Red'),
-            (6, 'Blu'),
-            (6, 'Yel'),
+            ( 6, 'Red'),
+            ( 6, 'Blu'),
+            ( 6, 'Yel'),
 
-            (1, 'Red'),
-            (2, 'Red'),
-            (3, 'Red'),
-            (4, 'Red'),
+            ( 1, 'Red'),
+            ( 2, 'Red'),
+            ( 3, 'Red'),
+            ( 4, 'Red'),
 
-            (7, 'Red'),
-            (8, 'Red'),
-            (9, 'Red'),
+            ( 7, 'Red'),
+            ( 8, 'Red'),
+            ( 9, 'Red'),
             (10, 'Red'),
 
             (10, 'Red'),
             (11, 'Red'),
             (12, 'Red'),
 
-            (2, 'Yel'),
-            (3, 'Yel'),
-            (4, 'Yel'),
-            (5, 'Yel'),
+            ( 2, 'Yel'),
+            ( 3, 'Yel'),
+            ( 4, 'Yel'),
+            ( 5, 'Yel'),
 
-            (1, 'Blk'),
-            (2, 'Blk'),
-            (3, 'Blk'),
-            (4, 'Blk'),
-            (5, 'Blk'),
-            (6, 'Blk'),
-            (7, 'Blk'),
+            ( 1, 'Blk'),
+            ( 2, 'Blk'),
+            ( 3, 'Blk'),
+            ( 4, 'Blk'),
+            ( 5, 'Blk'),
+            ( 6, 'Blk'),
+            ( 7, 'Blk'),
 
-            (4, 'Yel'),
-            (5, 'Yel'),
-            (6, 'Yel'),
-            (7, 'Yel'),
+            ( 4, 'Yel'),
+            ( 5, 'Yel'),
+            ( 6, 'Yel'),
+            ( 7, 'Yel'),
 
-            (9, 'Yel'),
+            ( 9, 'Yel'),
             (10, 'Yel'),
             (11, 'Yel'),
             (12, 'Yel'),
 
             # More in Goodnotes pictures
         ])
-        print(board.solve())
+        print(board.simplify())
         # except CantSolveTile:
         #     print('cant solve it')
+
+    if False:
+        tiles = []
+        for rank in rules.ranks[0:3]:
+            for suit in rules.suits[0:1]:
+                tiles.append((rank, suit))
+                tiles.append((rank, suit))
+        board = Board(tiles=tiles)
+        try:
+            print(board.solve())
+        except CantSolveTile:
+            print('cant solve it')
+

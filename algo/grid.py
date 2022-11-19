@@ -22,6 +22,20 @@ class Grid():
             rank = tile[0]
             self.matrix[rank, suit] += 1
         
+    def print(self, tabs=0):
+        indent = '\t'*tabs
+        for i, row in enumerate(self.matrix):
+            print(indent, end='')
+            if i == 0:
+                print('[', end='')
+            else:
+                print(' ', end='')
+            print(row, end='')
+            if i != len(self.matrix)-1:
+                print(',')
+            else:
+                print(']')
+
     def check_kernels_match(self, kernel_indexes, rank, suit):
         assert iter(kernel_indexes), 'kernel_indexes not iterable'
         kernel = np.sum([self.kernels[k] for k in kernel_indexes], 0)

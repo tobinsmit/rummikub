@@ -32,6 +32,23 @@ class Plan():
         s = s + ']'
         return s
 
+    def print(self, tabs=0):
+        # return str(self.p)
+        indent = '\t'*tabs
+        s = indent +'['
+        for i, group in enumerate(self.p):
+            if i:
+                s = s + ',\n' + indent + ' '
+            s = s + '['
+            for j, tile in enumerate(group):
+                # s = s + f'({tile[0]:>2}, {rules.suitStringMap[tile[1]]})'
+                s = s + f'({tile[0]:>2}, {tile[1]})'
+                if j < len(group)-1:
+                    s = s + ', '
+            s = s + ']'
+        s = s + ']'
+        print(s)
+
     def is_valid(self, verbose=False):
         for group in self.p:
             if not Plan.is_group_valid(group):
