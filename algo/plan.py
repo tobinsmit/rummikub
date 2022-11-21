@@ -32,7 +32,7 @@ class Plan():
         s = s + ']'
         return s
 
-    def print(self, tabs=0):
+    def print(self, tabs=0, suit_strings=False):
         # return str(self.p)
         indent = '\t'*tabs
         s = indent +'['
@@ -42,7 +42,10 @@ class Plan():
             s = s + '['
             for j, tile in enumerate(group):
                 # s = s + f'({tile[0]:>2}, {rules.suitStringMap[tile[1]]})'
-                s = s + f'({tile[0]:>2}, {tile[1]})'
+                if suit_strings:
+                    s = s + f'({tile[0]:>2}, {rules.suitStringMap[tile[1]]})'
+                else:
+                    s = s + f'({tile[0]:>2}, {tile[1]})'
                 if j < len(group)-1:
                     s = s + ', '
             s = s + ']'

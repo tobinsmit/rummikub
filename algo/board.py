@@ -25,7 +25,11 @@ class Board():
             self.plan.p = bd['plan']
             self.grid.matrix = np.array(bd['spare_grid'], dtype=int)
 
-    def find_tile_moves(self, rank, suit):
+    def print(self, tabs=0):
+        self.plan.print(tabs=tabs)
+        self.grid.print(tabs=tabs)
+
+    def find_tile_moves(self, rank, suit, debug=False):
         new_group_moves = self.grid.find_tile_new_group_moves(rank, suit)
         add_to_group_moves = self.plan.find_tile_add_to_group_moves(rank, suit)
         # print('new_group_moves', new_group_moves)
@@ -34,7 +38,7 @@ class Board():
         # input('enter to continue')
 
         for move in new_group_moves:
-            print('found new group')
+            if debug: print('found new group move')
             new_board = Board(tiles=[])
             new_board.plan.p = copy.deepcopy(self.plan.p)
             new_board.plan.p.append(copy.deepcopy(move['group']))
@@ -43,7 +47,7 @@ class Board():
             move['new_board_data'] = new_board.data_str()
 
         for move in add_to_group_moves:
-            print('found add to group')
+            if debug: print('found add to group move')
             rank = move['rank']
             suit = move['suit']
             new_matrix = copy.deepcopy(self.grid.matrix)
@@ -56,10 +60,10 @@ class Board():
 
         return [*new_group_moves, *add_to_group_moves]
         
-    def simplify(self):
-        print('\t' +'simplifying')
-        self.plan.print(tabs=2)
-        self.grid.print(tabs=2)
+    def simplify(self, debug=False):
+        if debug:
+            print('\t' +'simplifying')
+            self.print(tabs=2)
         fresh_changes = True
         while fresh_changes:
             fresh_changes = False
@@ -68,7 +72,8 @@ class Board():
             # print(self.grid.matrix)
             for rank in rules.ranks:
                 for suit in rules.suits:
-                    print(f'tile=({rank},{suit})')
+                    if debug:
+                        print(f'tile=({rank},{suit})')
                     tiles_unplaced = self.grid.matrix[rank, suit]
                     if tiles_unplaced == 0:
                         continue
@@ -77,45 +82,47 @@ class Board():
                     elif tiles_unplaced > 2:
                         raise Exception('Too many of one number')
                     
-                    moves = self.find_tile_moves(rank, suit)
-
+                    moves = self.find_tile_moves(rank, suit, debug=debug)
 
                     if len(moves) == 0:
                         raise CantSolveTile
                     elif len(moves) == tiles_unplaced:
                         # All moves must be true
-                        print('\t\t' + f'enacting moves on ({rank}, {suit})')
+                        if debug: 
+                            print('\t\t' + f'enacting moves on ({rank}, {suit})')
                         for move in moves:
                             # Enact move
                             if move['type'] == 'new_group':
-                                print('\t\t\t' + 'doing add to group move')
+                                if debug: print('\t\t\t' + 'doing add to group move')
                                 data = json.loads(move['new_board_data'])
                                 self.grid.matrix = np.array(data['spare_grid'], dtype=int)
                                 self.plan.p = data['plan']
                             elif move['type'] == 'add_to_group':
-                                print('\t\t\t' + 'doing add to group move')
+                                if debug: print('\t\t\t' + 'doing add to group move')
                                 data = json.loads(move['new_board_data'])
                                 self.grid.matrix = np.array(data['spare_grid'], dtype=int)
                                 self.plan.p = data['plan']
                             else:
                                 raise Exception('Bad move type')
 
-                            print('\t\t\t' + 'new board')
-                            self.plan.print(tabs=4)
-                            self.grid.print(tabs=4)
+                            if debug: 
+                                print('\t\t\t' + 'new board')
+                                self.print(tabs=4)
 
                         fresh_changes = True
 
-            print('\t'+ 'simplifying loopback')
-            
-    def find_board_choice(self):
+            if debug: print('\t'+ 'simplifying loopback')
+        if debug: print('Done simplifying')
+
+    def find_board_choice(self, debug=False):
         tile_moves = np.zeros(shape=[len(rules.ranks), len(rules.suits)], dtype=list)
         tile_moves_len = np.zeros(shape=[len(rules.ranks), len(rules.suits)], dtype=int)
         for rank in rules.ranks:
             for suit in rules.suits:
-                moves = self.find_tile_moves(rank, suit)
-                tile_moves[rank, suit] = moves
-                tile_moves_len[rank, suit] = len(moves)
+                if self.grid.matrix[rank, suit] > 0:
+                    moves = self.find_tile_moves(rank, suit, debug=False)
+                    tile_moves[rank, suit] = moves
+                    tile_moves_len[rank, suit] = len(moves)
     
         num_least_move_options = tile_moves_len[tile_moves_len>0].min()
         choice_tiles_indices = (tile_moves_len == num_least_move_options).nonzero()
@@ -123,29 +130,34 @@ class Board():
         choice = tile_moves[choice_tile[0], choice_tile[1]]
         return choice
     
-    def solve(self):
-        print('solving')
+    def solve(self, debug=False):
+        if debug:
+            print('solving')
         routes = [[self]] 
         for route in routes:
             board = route[-1]
             board.simplify()
             if board.is_done():
-                print('simplify got it')
+                if debug:
+                    print('simplify got it')
                 return board.plan
-            print('finding choices')
-            choice = board.find_board_choice()
+            if debug:
+                board.print()
+                print('finding choices')
+            choice = board.find_board_choice(debug=debug)
             for move in choice:
                 new_board = Board(data_str=move['new_board_data'])
                 if new_board.is_done():
-                    print('one move got it')
-                    print(move)
-                    print(new_board.grid.matrix)
+                    if debug:
+                        print('one move got it')
+                        print(move)
+                        print(new_board.grid.matrix)
                     return new_board.plan
                 else:
                     new_route = [*route, new_board]
                     routes.append(new_route)
-            print('going to next route')
-        print('Damn didnt get it')
+            if debug: print('going to next route')
+        if debug: print('Damn didn\'t get it')
         return None
 
     def is_done(self):
@@ -238,9 +250,21 @@ if __name__ == '__main__':
 
             # More in Goodnotes pictures
         ])
-        print(board.simplify())
-        # except CantSolveTile:
-        #     print('cant solve it')
+
+        if False:
+            board.simplify()
+            board.plan.print()
+            board.grid.print()
+        else:
+            import time
+            start = time.time()
+            try:
+                res = board.solve()
+                res.print(suit_strings=True)
+            except CantSolveTile:
+                print('cant solve it')
+            end = time.time()
+            print(f'Took {end-start}sec')
 
     if False:
         tiles = []
