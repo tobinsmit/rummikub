@@ -1,5 +1,5 @@
 import numpy as np
-
+import copy
 import rules
 
 class Plan():
@@ -97,8 +97,8 @@ class Plan():
             new_group = [*group, (rank, suit)]
             res = Plan.is_group_valid(new_group)
             if res:
-                new_p = self.p
-                i = self.p.index(group)
+                new_p = copy.deepcopy(self.p)
+                i = new_p.index(group)
                 new_p[i] = new_group
                 option = {
                     'type': 'add_to_group',

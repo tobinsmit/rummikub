@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 import rules
 
@@ -25,6 +26,7 @@ class Grid():
     def print(self, tabs=0):
         indent = '\t'*tabs
         for i, row in enumerate(self.matrix):
+            # TODO HIGH Add row and column numbers to print
             print(indent, end='')
             if i == 0:
                 print('[', end='')
@@ -62,7 +64,7 @@ class Grid():
         assert type(kernel_idx) is not np.array
         kernel = self.kernels[kernel_idx]
         group = []
-        new_matrix = np.array(self.matrix, copy=True)
+        new_matrix = copy.deepcopy(self.matrix)
         for kernel_rank in range(len(kernel)):
             for kernel_suit in range(len(kernel[0])):
                 kernel_val = kernel[kernel_rank, kernel_suit]

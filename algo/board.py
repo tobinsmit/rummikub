@@ -1,5 +1,6 @@
 import numpy as np
 import json
+import copy
 
 import rules
 from plan import Plan
@@ -34,24 +35,24 @@ class Board():
 
         for move in new_group_moves:
             print('found new group')
-            group = move['group']
-            new_plan = self.plan.p.copy()
-            new_plan.append(group)
             new_board = Board(tiles=[])
-            new_board.plan.p = new_plan.copy()
-            new_board.grid.matrix = move['new_matrix'].copy()
+            new_board.plan.p = copy.deepcopy(self.plan.p)
+            new_board.plan.p.append(copy.deepcopy(move['group']))
+            
+            new_board.grid.matrix = copy.deepcopy(move['new_matrix'])
             move['new_board_data'] = new_board.data_str()
 
         for move in add_to_group_moves:
             print('found add to group')
             rank = move['rank']
             suit = move['suit']
-            new_matrix = self.grid.matrix.copy()
+            new_matrix = copy.deepcopy(self.grid.matrix)
             new_matrix[rank, suit] -= 1
             new_board = Board(tiles=[])
             new_board.plan.p = move['new_plan']
-            new_board.grid.matrix = new_matrix.copy()
+            new_board.grid.matrix = copy.deepcopy(new_matrix)
             move['new_board_data'] = new_board.data_str()
+
 
         return [*new_group_moves, *add_to_group_moves]
         
@@ -67,6 +68,7 @@ class Board():
             # print(self.grid.matrix)
             for rank in rules.ranks:
                 for suit in rules.suits:
+                    print(f'tile=({rank},{suit})')
                     tiles_unplaced = self.grid.matrix[rank, suit]
                     if tiles_unplaced == 0:
                         continue
@@ -77,19 +79,21 @@ class Board():
                     
                     moves = self.find_tile_moves(rank, suit)
 
+
                     if len(moves) == 0:
                         raise CantSolveTile
                     elif len(moves) == tiles_unplaced:
                         # All moves must be true
+                        print('\t\t' + f'enacting moves on ({rank}, {suit})')
                         for move in moves:
                             # Enact move
                             if move['type'] == 'new_group':
-                                print('\t\t' + 'doing new group move')
+                                print('\t\t\t' + 'doing add to group move')
                                 data = json.loads(move['new_board_data'])
                                 self.grid.matrix = np.array(data['spare_grid'], dtype=int)
                                 self.plan.p = data['plan']
                             elif move['type'] == 'add_to_group':
-                                print('\t\t' + 'doing add to group move')
+                                print('\t\t\t' + 'doing add to group move')
                                 data = json.loads(move['new_board_data'])
                                 self.grid.matrix = np.array(data['spare_grid'], dtype=int)
                                 self.plan.p = data['plan']
