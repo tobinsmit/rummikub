@@ -6,10 +6,10 @@ import rules
 from plan import Plan
 from grid import Grid
 
-class CantSolveTile(Exception):
-    pass
-
 class Board():
+    class CantSolveTile(Exception):
+        pass
+
     def __init__(self, tiles=None, data_str:(str or None)=None):
         assert (tiles is not None) or (data_str is not None)
         assert (tiles is None) or (data_str is None)
@@ -85,7 +85,7 @@ class Board():
                     moves = self.find_tile_moves(rank, suit, debug=debug)
 
                     if len(moves) == 0:
-                        raise CantSolveTile
+                        raise self.CantSolveTile
                     elif len(moves) == tiles_unplaced:
                         # All moves must be true
                         if debug: 
