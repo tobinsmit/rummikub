@@ -26,7 +26,7 @@ class Game():
             board = Board(tiles)
             try:
                 plan = board.solve()
-            except Board.CantSolveTile:
+            except Board.ExceptCantSolveTile:
                 if verbose: print('\tCant solve')
                 continue
             if plan == None:

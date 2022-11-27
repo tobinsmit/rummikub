@@ -7,7 +7,10 @@ from plan import Plan
 from grid import Grid
 
 class Board():
-    class CantSolveTile(Exception):
+    class ExceptCantSolveTile(Exception):
+        pass
+
+    class ExceptTooManyOfATile(Exception):
         pass
 
     def __init__(self, tiles=None, data_str:(str or None)=None):
@@ -80,12 +83,12 @@ class Board():
                     elif tiles_unplaced < 0:
                         raise Exception('Gone into negative')
                     elif tiles_unplaced > 2:
-                        raise Exception('Too many of one number')
+                        raise self.ExceptTooManyOfATile
                     
                     moves = self.find_tile_moves(rank, suit, debug=debug)
 
                     if len(moves) == 0:
-                        raise self.CantSolveTile
+                        raise self.ExceptCantSolveTile
                     elif len(moves) == tiles_unplaced:
                         # All moves must be true
                         if debug: 
@@ -198,10 +201,10 @@ if __name__ == '__main__':
         ])
         try:
             print(board.solve())
-        except CantSolveTile:
+        except ExceptCantSolveTile:
             print('cant solve it')
 
-    if True:
+    if False:
         board = Board(tiles=[
             ( 5, 'Red'),
             ( 6, 'Red'),
@@ -261,7 +264,7 @@ if __name__ == '__main__':
             try:
                 res = board.solve()
                 res.print(suit_strings=True)
-            except CantSolveTile:
+            except ExceptCantSolveTile:
                 print('cant solve it')
             end = time.time()
             print(f'Took {end-start}sec')
@@ -275,6 +278,84 @@ if __name__ == '__main__':
         board = Board(tiles=tiles)
         try:
             print(board.solve())
-        except CantSolveTile:
+        except ExceptCantSolveTile:
             print('cant solve it')
+
+    if True:
+        tiles=[
+            [6,'Blu'],[7,'Blu'],[8,'Blu'],
+            [7,'Blk'],[7,'Yel'],[7,'Red'],
+            [5,'Blu'],[6,'Blu'],[7,'Blu'],
+            [10,'Blu'],[11,'Blu'],[12,'Blu'],[13,'Blu'],
+            [9,'Red'],[10,'Red'],[11,'Red'],[12,'Red'],
+            [3,'Blk'],[4,'Blk'],[5,'Blk'],
+            [7,'Blk'],[8,'Blk'],[9,'Blk'],[10,'Blk'],[11,'Blk'],
+            [11,'Blk'],[12,'Blk'],[13,'Blk'],
+            [8,'Blk'],[8,'Blu'],[8,'Red'],
+            [13,'Blk'],[13,'Blu'],[13,'Red'],[13,'Yel'],
+            [3,'Red'],[4,'Red'],[5,'Red'],[6,'Red'],[7,'Red'],
+            [1,'Blk'],[1,'Yel'],[1,'Red'],
+            [4,'Blu'],[4,'Yel'],[4,'Red'],
+            [1,'Blk'],[1,'Blu'],[1,'Red'],
+            [5,'Blk'],[5,'Blu'],[5,'Yel'],
+            [2,'Blu'],[3,'Blu'],[4,'Blu'],
+            [10,'Blk'],[10,'Blu'],[10,'Red'],[10,'Yel'],
+            [6,'Yel'],[7,'Yel'],[8,'Yel'],[9,'Yel'],
+            [9,'Yel'],[10,'Yel'],[11,'Yel'],[12,'Yel'],[13,'Yel'],
+            [3,'Yel'],[4,'Yel'],[5,'Yel'],[6,'Yel'],
+            [12,'Blk'],[12,'Blu'],[12,'Red'],
+            [2,'Blu'],[2,'Red'],['J','Blk'],
+            [3,'Yel'],
+        ]
+        # Numbers -> ranks
+        for tile in tiles:
+            if tile[0] != 'J':
+                tile[0] -= 1
+        
+        # Test for each joker value
+        jokers = []
+        for tile in tiles:
+            if tile[0] == 'J':
+                jokers.append(tile)
+        
+        if len(jokers) == 0:
+            board = Board(tiles=tiles)
+            try:
+                print(board.solve())
+            except board.ExceptCantSolveTile:
+                print('cant solve it')
+            except board.ExceptTooManyOfATile:
+                print('too many of a tile')
+
+        if len(jokers) == 1:
+            for rank in rules.ranks:
+                for suit in rules.suits:
+                    jokers[0][0] = rank
+                    jokers[0][1] = suit
+                    print(f'Trying jokers = {jokers}')
+                    board = Board(tiles=tiles)
+                    try:
+                        print(board.solve())
+                    except board.ExceptCantSolveTile:
+                        print('cant solve it')
+                    except board.ExceptTooManyOfATile:
+                        print('too many of a tile')
+
+        if len(jokers) == 2:
+            for rankA in rules.ranks:
+                for suitA in rules.ranks:
+                    for rankB in rules.ranks:
+                        for suitB in rules.ranks:
+                            jokers[0][0] = rankA
+                            jokers[0][1] = suitA
+                            jokers[1][0] = rankB
+                            jokers[1][1] = suitB
+                            print(f'Trying jokers = {jokers}')
+                            board = Board(tiles=tiles)
+                            try:
+                                print(board.solve())
+                            except board.ExceptCantSolveTile:
+                                print('cant solve it')
+                            except board.ExceptTooManyOfATile:
+                                print('too many of a tile')
 
