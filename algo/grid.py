@@ -4,7 +4,8 @@ import copy
 import numpy as np
 import rules
 
-class Grid():
+
+class Grid:
     def __init__(self, tiles=None, plan=None):
         assert (tiles is not None) or (plan is not None)
         assert not ((tiles is not None) and (plan is not None))
@@ -24,17 +25,17 @@ class Grid():
                 suit = tile[1]
             rank = tile[0]
             self.matrix[rank, suit] += 1
-        
+
     def print(self, tabs=0):
-        indent = '\t'*tabs
-        suits_str = ' '.join([str(i) for i in rules.suits])
-        print(f'{indent}grid {suits_str}')
+        indent = "\t" * tabs
+        suits_str = " ".join([str(i) for i in rules.suits])
+        print(f"{indent}grid {suits_str}")
         for i, row in enumerate(self.matrix):
-            print(f'{indent}{rules.ranks[i]:3} {row}')
+            print(f"{indent}{rules.ranks[i]:3} {row}")
 
     def check_kernels_match(self, kernel_indexes, rank, suit):
         """Check if kernals match on a given tile"""
-        assert iter(kernel_indexes), 'kernel_indexes not iterable'
+        assert iter(kernel_indexes), "kernel_indexes not iterable"
         kernel = np.sum([self.kernels[k] for k in kernel_indexes], 0)
         for kernel_rank in range(len(kernel)):
             for kernel_suit in range(len(kernel[0])):
@@ -43,14 +44,14 @@ class Grid():
                     if rules.loop13to1:
                         matrix_rank = (kernel_rank - 2 + rank) % len(rules.ranks)
                     else:
-                        matrix_rank = (kernel_rank - 2 + rank)
+                        matrix_rank = kernel_rank - 2 + rank
                         if matrix_rank < 0 or matrix_rank >= len(rules.ranks):
                             return False
                     matrix_suit = (kernel_suit + suit) % len(rules.suits)
                     matrix_val = self.matrix[matrix_rank, matrix_suit]
                     if matrix_val < kernel_val:
                         return False
-        
+
         return True
 
     def kernel_to_group_option(self, kernel_idx, rank, suit):
@@ -66,23 +67,22 @@ class Grid():
                     if rules.loop13to1:
                         matrix_rank = (kernel_rank - 2 + rank) % len(rules.ranks)
                     else:
-                        matrix_rank = (kernel_rank - 2 + rank)
+                        matrix_rank = kernel_rank - 2 + rank
                         if matrix_rank < 0 or matrix_rank >= len(rules.ranks):
-                            print('kernel')
+                            print("kernel")
                             print(kernel)
-                            print('rank', rank)
-                            print('suit', suit)
-                            raise Exception('Going around the bend but shouldnt')
+                            print("rank", rank)
+                            print("suit", suit)
+                            raise Exception("Going around the bend but shouldnt")
                     matrix_suit = (kernel_suit + suit) % len(rules.suits)
                     group.append((matrix_rank, matrix_suit))
                     new_matrix[matrix_rank, matrix_suit] -= 1
         option = {
-            'type': 'new_group',
-            'group': group,
-            'new_matrix': new_matrix,
+            "type": "new_group",
+            "group": group,
+            "new_matrix": new_matrix,
         }
         return option
-
 
     def find_tile_new_group_moves(self, rank, suit):
         options = []
@@ -90,67 +90,72 @@ class Grid():
             works = self.check_kernels_match([kernel_idx], rank, suit)
             if works:
                 option = self.kernel_to_group_option(kernel_idx, rank, suit)
-                options.append(option)        
+                options.append(option)
         return options
-        
-    kernels = np.array([
+
+    kernels = np.array(
         [
-            [1, 0, 0, 0],
-            [1, 0, 0, 0],
-            [1, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 0, 0, 0],
-            [1, 0, 0, 0],
-            [1, 0, 0, 0],
-            [1, 0, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [1, 0, 0, 0],
-            [1, 0, 0, 0],
-            [1, 0, 0, 0]
-        ],
-        [
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [1, 0, 1, 1],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [1, 1, 0, 1],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [1, 1, 1, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
+            [
+                [1, 0, 0, 0],
+                [1, 0, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+            ],
+            [
+                [0, 0, 0, 0],
+                [1, 0, 0, 0],
+                [1, 0, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 0],
+            ],
+            [
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [1, 0, 0, 0],
+                [1, 0, 0, 0],
+                [1, 0, 0, 0],
+            ],
+            [
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [1, 0, 1, 1],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+            ],
+            [
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [1, 1, 0, 1],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+            ],
+            [
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [1, 1, 1, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+            ],
         ]
-    ])
+    )
+
 
 def test_check_kernels_match():
-    g = Grid(tiles=[
-        (1,0),
-        (2,0),
-        (3,0),
-        (6,0),
-        (6,1),
-        (6,2),
-        (12,'Yel'),
-    ])
-    assert g.check_kernels_match([2], 1, 0) # 1 and [0,+1,+2]
-    assert g.check_kernels_match([1], 2, 0) # 2 and [-1,0,+1]
-    assert g.check_kernels_match([0], 3, 0) # 3 and [-2,-1,0]
+    g = Grid(
+        tiles=[
+            (1, 0),
+            (2, 0),
+            (3, 0),
+            (6, 0),
+            (6, 1),
+            (6, 2),
+            (12, "Yel"),
+        ]
+    )
+    assert g.check_kernels_match([2], 1, 0)  # 1 and [0,+1,+2]
+    assert g.check_kernels_match([1], 2, 0)  # 2 and [-1,0,+1]
+    assert g.check_kernels_match([0], 3, 0)  # 3 and [-2,-1,0]
     assert not g.check_kernels_match([0], 1, 0)
     assert not g.check_kernels_match([1], 1, 0)
     assert not g.check_kernels_match([3], 1, 0)
@@ -172,13 +177,14 @@ def test_check_kernels_match():
     assert not g.check_kernels_match([5], 6, 3)
     assert not g.check_kernels_match([2], 12, 3)
 
-    move = g.kernel_to_group_option(5,6,0)
-    group = move['group']
-    assert set(group) == set([(6,1),(6,2),(6,0)])
-    move = g.kernel_to_group_option(1,2,0)
-    group = move['group']
-    assert set(group) == set([(3,0),(1,0),(2,0)])
-    print('All tests passed :)')
+    move = g.kernel_to_group_option(5, 6, 0)
+    group = move["group"]
+    assert set(group) == set([(6, 1), (6, 2), (6, 0)])
+    move = g.kernel_to_group_option(1, 2, 0)
+    group = move["group"]
+    assert set(group) == set([(3, 0), (1, 0), (2, 0)])
+    print("All tests passed :)")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_check_kernels_match()

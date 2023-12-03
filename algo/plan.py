@@ -4,7 +4,8 @@ import numpy as np
 import copy
 import rules
 
-class Plan():
+
+class Plan:
     def __init__(self, p_in=[]):
         # String to enum
         self.p = []
@@ -19,22 +20,22 @@ class Plan():
                 self.p[-1].append((num, suit))
 
     def print(self, tabs=0, suit_strings=False):
-        indent = '\t'*tabs
-        s = indent +'['
+        indent = "\t" * tabs
+        s = indent + "["
         for i, group in enumerate(self.p):
             if i:
-                s = s + ',\n' + indent + ' '
-            s = s + '['
+                s = s + ",\n" + indent + " "
+            s = s + "["
             for j, tile in enumerate(group):
                 # s = s + f'({tile[0]:>2}, {rules.suitStringMap[tile[1]]})'
                 if suit_strings:
-                    s = s + f'({tile[0]:>2}, {rules.suitStringMap[tile[1]]})'
+                    s = s + f"({tile[0]:>2}, {rules.suitStringMap[tile[1]]})"
                 else:
-                    s = s + f'({tile[0]:>2}, {tile[1]})'
-                if j < len(group)-1:
-                    s = s + ', '
-            s = s + ']'
-        s = s + ']'
+                    s = s + f"({tile[0]:>2}, {tile[1]})"
+                if j < len(group) - 1:
+                    s = s + ", "
+            s = s + "]"
+        s = s + "]"
         return s
 
     def __str__(self):
@@ -52,7 +53,7 @@ class Plan():
     def is_group_valid(group, verbose=False):
         if len(group) < 3:
             if verbose:
-                print('Group too short')
+                print("Group too short")
             return False
 
         ranksList = [tile[0] for tile in group]
@@ -65,22 +66,22 @@ class Plan():
 
         if isGroupOfRanks and isGroupOfSuits:
             if verbose:
-                print('rank group and suit group')
+                print("rank group and suit group")
             return False
-        
+
         if isGroupOfRanks:
             # Check ranks are consecutive
             sortedRanks = np.sort(ranksList)
             sortedRanksDiff = np.diff(sortedRanks)
             if not np.all(sortedRanksDiff == 1):
                 if verbose:
-                    print('rank group not consecutive')
+                    print("rank group not consecutive")
                 return False
 
         if isGroupOfSuits:
             if len(suitsSet) != len(group):
                 if verbose:
-                    print('Repeated suits')
+                    print("Repeated suits")
                 return False
 
         return True
@@ -96,48 +97,80 @@ class Plan():
                 i = new_plan.index(group)
                 new_plan[i] = new_group
                 option = {
-                    'type': 'add_to_group',
-                    'old_group': group,
-                    'new_group': new_group,
-                    'new_plan': new_plan,
-                    'rank': rank,
-                    'suit': suit,
+                    "type": "add_to_group",
+                    "old_group": group,
+                    "new_group": new_group,
+                    "new_plan": new_plan,
+                    "rank": rank,
+                    "suit": suit,
                 }
                 options.append(option)
 
         return options
 
+
 def test_plan_class():
     def unit_test_valid(p, is_valid, error_msg):
         assert Plan(p).is_valid() == is_valid, error_msg
-        
-    assert Plan([[(6, 'Red'), (7, 'Red'), (8, 'Red')]]).is_valid() == True, 'Does not work for normal group of ranks'
-    assert Plan([[(10, 'Blu'), (10, 'Red'), (10, 'Blk')]]).is_valid() == True, 'Does not work for normal group of suits'
-    assert Plan([[(6, 'Red'), (7, 'Red'), (9, 'Red')]]).is_valid() == False, 'Does not catch gap in group of ranks'
-    assert Plan([[(6, 'Red'), (7, 'Red'), (8, 'Blu')]]).is_valid() == False, 'Does not catch group with multiple ranks and multiple suits'
-    assert Plan([[(6, 'Red'), (6, 'Red'), (7, 'Red')]]).is_valid() == False, 'Does not catch rank group with double ups'
-    assert Plan([[(10, 'Red'), (10, 'Red'), (10, 'Blk')]]).is_valid() == False, 'Does not catch suit group with double ups'
-    assert Plan([[(10, 'Red'), (10, 'Blk')]]).is_valid() == False, 'Does not catch suit group with two tiles'
-    assert Plan([[(6, 'Red'), (7, 'Red')]]).is_valid() == False, 'Does not catch rank group with two tiles'
-    assert Plan([[(num, 'Red') for num in rules.ranks]]).is_valid() == True, 'Does not allow large rank group'
-    
-    assert Plan([
-        [(6, 'Red'), (7, 'Red'), (8, 'Red')],
-        [(10, 'Blu'), (10, 'Red'), (10, 'Blk'), (10,'Yel')],
-    ]).is_valid() == True, 'Does not work with multiple  groups'
-    
-    assert Plan([
-        [(6, 'Red'), (7, 'Red'), (8, 'Red')],
-        [(10, 'Red'), (10, 'Red')],
-    ]).is_valid() == False, 'Does not catch bad group in multiple groups'
 
-    print('Unit tests passed')
+    assert (
+        Plan([[(6, "Red"), (7, "Red"), (8, "Red")]]).is_valid() == True
+    ), "Does not work for normal group of ranks"
+    assert (
+        Plan([[(10, "Blu"), (10, "Red"), (10, "Blk")]]).is_valid() == True
+    ), "Does not work for normal group of suits"
+    assert (
+        Plan([[(6, "Red"), (7, "Red"), (9, "Red")]]).is_valid() == False
+    ), "Does not catch gap in group of ranks"
+    assert (
+        Plan([[(6, "Red"), (7, "Red"), (8, "Blu")]]).is_valid() == False
+    ), "Does not catch group with multiple ranks and multiple suits"
+    assert (
+        Plan([[(6, "Red"), (6, "Red"), (7, "Red")]]).is_valid() == False
+    ), "Does not catch rank group with double ups"
+    assert (
+        Plan([[(10, "Red"), (10, "Red"), (10, "Blk")]]).is_valid() == False
+    ), "Does not catch suit group with double ups"
+    assert (
+        Plan([[(10, "Red"), (10, "Blk")]]).is_valid() == False
+    ), "Does not catch suit group with two tiles"
+    assert (
+        Plan([[(6, "Red"), (7, "Red")]]).is_valid() == False
+    ), "Does not catch rank group with two tiles"
+    assert (
+        Plan([[(num, "Red") for num in rules.ranks]]).is_valid() == True
+    ), "Does not allow large rank group"
 
-if __name__=='__main__':
+    assert (
+        Plan(
+            [
+                [(6, "Red"), (7, "Red"), (8, "Red")],
+                [(10, "Blu"), (10, "Red"), (10, "Blk"), (10, "Yel")],
+            ]
+        ).is_valid()
+        == True
+    ), "Does not work with multiple  groups"
+
+    assert (
+        Plan(
+            [
+                [(6, "Red"), (7, "Red"), (8, "Red")],
+                [(10, "Red"), (10, "Red")],
+            ]
+        ).is_valid()
+        == False
+    ), "Does not catch bad group in multiple groups"
+
+    print("Unit tests passed")
+
+
+if __name__ == "__main__":
     test_plan_class()
 
-    p = Plan([
-        [(6, 'Red'), (7, 'Red'), (8, 'Red')],
-        [(10, 'Blu'), (10, 'Red'), (10, 'Blk'), (10,'Yel')],
-    ])
+    p = Plan(
+        [
+            [(6, "Red"), (7, "Red"), (8, "Red")],
+            [(10, "Blu"), (10, "Red"), (10, "Blk"), (10, "Yel")],
+        ]
+    )
     print(p)

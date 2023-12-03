@@ -8,14 +8,15 @@ import rules
 from plan import Plan
 from grid import Grid
 
-class Board():
+
+class Board:
     class ExceptCantSolveTile(Exception):
         pass
 
     class ExceptTooManyOfATile(Exception):
         pass
 
-    def __init__(self, tiles=None, data_str:(str or None)=None):
+    def __init__(self, tiles=None, data_str: (str or None) = None):
         assert (tiles is not None) or (data_str is not None)
         assert (tiles is None) or (data_str is None)
 
@@ -27,14 +28,14 @@ class Board():
             self.grid = Grid(tiles=[])
             self.plan = Plan()
             bd = json.loads(data_str)
-            self.plan.p = bd['plan']
-            self.grid.matrix = np.array(bd['spare_grid'], dtype=int)
+            self.plan.p = bd["plan"]
+            self.grid.matrix = np.array(bd["spare_grid"], dtype=int)
 
     def print(self, tabs=0):
         self.plan.print(tabs=tabs)
         self.grid.print(tabs=tabs)
 
-    def find_tile_moves(self, rank, suit, debug=False):
+    def find_tile_moves(self, rank, suit, verbose=False):
         new_group_moves = self.grid.find_tile_new_group_moves(rank, suit)
         add_to_group_moves = self.plan.find_tile_add_to_group_moves(rank, suit)
         # print('new_group_moves', new_group_moves)
@@ -43,31 +44,30 @@ class Board():
         # input('enter to continue')
 
         for move in new_group_moves:
-            if debug: print('found new group move')
+            print("found new group move") if verbose else None
             new_board = Board(tiles=[])
             new_board.plan.p = copy.deepcopy(self.plan.p)
-            new_board.plan.p.append(copy.deepcopy(move['group']))
-            
-            new_board.grid.matrix = copy.deepcopy(move['new_matrix'])
-            move['new_board_data'] = new_board.data_str()
+            new_board.plan.p.append(copy.deepcopy(move["group"]))
+
+            new_board.grid.matrix = copy.deepcopy(move["new_matrix"])
+            move["new_board_data"] = new_board.data_str()
 
         for move in add_to_group_moves:
-            if debug: print('found add to group move')
-            rank = move['rank']
-            suit = move['suit']
+            print("found add to group move") if verbose else None
+            rank = move["rank"]
+            suit = move["suit"]
             new_matrix = copy.deepcopy(self.grid.matrix)
             new_matrix[rank, suit] -= 1
             new_board = Board(tiles=[])
-            new_board.plan.p = move['new_plan']
+            new_board.plan.p = move["new_plan"]
             new_board.grid.matrix = copy.deepcopy(new_matrix)
-            move['new_board_data'] = new_board.data_str()
-
+            move["new_board_data"] = new_board.data_str()
 
         return [*new_group_moves, *add_to_group_moves]
-        
-    def simplify(self, debug=False):
-        if debug:
-            print('\t' +'simplifying')
+
+    def simplify(self, verbose=False):
+        if verbose:
+            print("\t" + "simplifying")
             self.print(tabs=2)
         fresh_changes = True
         while fresh_changes:
@@ -75,186 +75,193 @@ class Board():
             # print('\nboard')
             # print(self.plan)
             # print(self.grid.matrix)
-            for rank in rules.ranks:
-                for suit in rules.suits:
-                    if debug:
-                        print(f'tile=({rank},{suit})')
-                    tiles_unplaced = self.grid.matrix[rank, suit]
-                    if tiles_unplaced == 0:
-                        continue
-                    elif tiles_unplaced < 0:
-                        raise Exception('Gone into negative')
-                    elif tiles_unplaced > 2:
-                        raise self.ExceptTooManyOfATile
-                    
-                    moves = self.find_tile_moves(rank, suit, debug=debug)
+            for rank, suit in [(r, s) for r in rules.ranks for s in rules.suits]:
+                # For each tile
+                print(f"tile=({rank},{suit})") if verbose else None
+                tiles_unplaced = self.grid.matrix[rank, suit]
+                if tiles_unplaced == 0:
+                    continue
+                elif tiles_unplaced < 0:
+                    raise Exception("Gone into negative")
+                elif tiles_unplaced > 2:
+                    # TODO This is incorrect for when using the joker
+                    raise self.ExceptTooManyOfATile
 
-                    if len(moves) == 0:
-                        raise self.ExceptCantSolveTile
-                    elif len(moves) == tiles_unplaced:
-                        # All moves must be true
-                        if debug: 
-                            print('\t\t' + f'enacting moves on ({rank}, {suit})')
-                        for move in moves:
-                            # Enact move
-                            if move['type'] == 'new_group':
-                                if debug: print('\t\t\t' + 'doing add to group move')
-                                data = json.loads(move['new_board_data'])
-                                self.grid.matrix = np.array(data['spare_grid'], dtype=int)
-                                self.plan.p = data['plan']
-                            elif move['type'] == 'add_to_group':
-                                if debug: print('\t\t\t' + 'doing add to group move')
-                                data = json.loads(move['new_board_data'])
-                                self.grid.matrix = np.array(data['spare_grid'], dtype=int)
-                                self.plan.p = data['plan']
-                            else:
-                                raise Exception('Bad move type')
+                moves = self.find_tile_moves(rank, suit, verbose=verbose)
 
-                            if debug: 
-                                print('\t\t\t' + 'new board')
-                                self.print(tabs=4)
+                if len(moves) == 0:
+                    raise self.ExceptCantSolveTile
+                elif len(moves) == tiles_unplaced:
+                    # All moves must be true
+                    if verbose:
+                        print("\t\t" + f"enacting moves on ({rank}, {suit})")
+                    for move in moves:
+                        # Enact move
+                        if move["type"] == "new_group":
+                            if verbose:
+                                print("\t\t\t" + "doing add to group move")
+                            data = json.loads(move["new_board_data"])
+                            self.grid.matrix = np.array(data["spare_grid"], dtype=int)
+                            self.plan.p = data["plan"]
+                        elif move["type"] == "add_to_group":
+                            if verbose:
+                                print("\t\t\t" + "doing add to group move")
+                            data = json.loads(move["new_board_data"])
+                            self.grid.matrix = np.array(data["spare_grid"], dtype=int)
+                            self.plan.p = data["plan"]
+                        else:
+                            raise Exception("Bad move type")
 
-                        fresh_changes = True
+                        if verbose:
+                            print("\t\t\t" + "new board")
+                            self.print(tabs=4)
 
-            if debug: print('\t'+ 'simplifying loopback')
-        if debug: print('Done simplifying')
+                    fresh_changes = True
 
-    def find_board_choice(self, debug=False):
+            print("\t" + "simplifying loopback") if verbose else None
+        print("Done simplifying") if verbose else None
+
+    def find_board_choice(self, verbose=False):
         tile_moves = np.zeros(shape=[len(rules.ranks), len(rules.suits)], dtype=list)
         tile_moves_len = np.zeros(shape=[len(rules.ranks), len(rules.suits)], dtype=int)
         for rank in rules.ranks:
             for suit in rules.suits:
                 if self.grid.matrix[rank, suit] > 0:
-                    moves = self.find_tile_moves(rank, suit, debug=False)
+                    moves = self.find_tile_moves(rank, suit, verbose=False)
                     tile_moves[rank, suit] = moves
                     tile_moves_len[rank, suit] = len(moves)
-    
-        num_least_move_options = tile_moves_len[tile_moves_len>0].min()
+
+        num_least_move_options = tile_moves_len[tile_moves_len > 0].min()
         choice_tiles_indices = (tile_moves_len == num_least_move_options).nonzero()
         choice_tile = (choice_tiles_indices[0][0], choice_tiles_indices[1][0])
         choice = tile_moves[choice_tile[0], choice_tile[1]]
         return choice
-    
-    def solve(self, debug=False):
-        if debug:
-            print('solving')
-        routes = [[self]] 
+
+    def solve(self, verbose=False):
+        print("solving") if verbose else None
+        routes = [[self]]
         for route in routes:
             board = route[-1]
             board.simplify()
             if board.is_done():
-                if debug:
-                    print('simplify got it')
+                print("simplify got it") if verbose else None
                 return board.plan
-            if debug:
+            if verbose:
                 board.print()
-                print('finding choices')
-            choice = board.find_board_choice(debug=debug)
+                print("finding choices")
+            choice = board.find_board_choice(verbose=verbose)
             for move in choice:
-                new_board = Board(data_str=move['new_board_data'])
+                new_board = Board(data_str=move["new_board_data"])
                 if new_board.is_done():
-                    if debug:
-                        print('one move got it')
+                    if verbose:
+                        print("one move got it")
                         print(move)
                         print(new_board.grid.matrix)
                     return new_board.plan
                 else:
                     new_route = [*route, new_board]
                     routes.append(new_route)
-            if debug: print('going to next route')
-        if debug: print('Damn didn\'t get it')
+            print("going to next route") if verbose else None
+        print("Damn didn't get it") if verbose else None
         return None
 
     def is_done(self):
         return self.grid.matrix.sum() == 0
 
     def data_str(self) -> str:
-        o  = dict()
-        o['spare_grid'] = self.grid.matrix.tolist()
-        o['plan'] = self.plan.p
+        o = dict()
+        o["spare_grid"] = self.grid.matrix.tolist()
+        o["plan"] = self.plan.p
         s = json.dumps(o)
         return s
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     if False:
-        board = Board(tiles=[
-            (6,'Blk'),
-            (7,'Blk'),
-            (8,'Blk'),
-            (9,'Blk'),
-        ])
+        board = Board(
+            tiles=[
+                (6, "Blk"),
+                (7, "Blk"),
+                (8, "Blk"),
+                (9, "Blk"),
+            ]
+        )
         print(board.solve())
 
     if False:
-        board = Board(tiles=[
-            (6,'Red'),
-            (6,'Blk'),
-            (6,'Blu'),
-            (6,'Yel'),
-            (7,'Red'),
-            (7,'Yel'),
-            (8,'Red'),
-            (8,'Yel'),
-            (9,'Red'),
-            (9,'Blk'),
-            (9,'Blu'),
-            (9,'Yel'),
-            # (12,'Yel'),
-        ])
+        board = Board(
+            tiles=[
+                (6, "Red"),
+                (6, "Blk"),
+                (6, "Blu"),
+                (6, "Yel"),
+                (7, "Red"),
+                (7, "Yel"),
+                (8, "Red"),
+                (8, "Yel"),
+                (9, "Red"),
+                (9, "Blk"),
+                (9, "Blu"),
+                (9, "Yel"),
+                # (12,'Yel'),
+            ]
+        )
         try:
             print(board.solve())
         except ExceptCantSolveTile:
-            print('cant solve it')
+            print("cant solve it")
 
     if False:
-        board = Board(tiles=[
-            ( 5, 'Red'),
-            ( 6, 'Red'),
-            ( 7, 'Red'),
-
-            ( 6, 'Red'),
-            ( 6, 'Blu'),
-            ( 6, 'Yel'),
-
-            ( 1, 'Red'),
-            ( 2, 'Red'),
-            ( 3, 'Red'),
-            ( 4, 'Red'),
-
-            ( 7, 'Red'),
-            ( 8, 'Red'),
-            ( 9, 'Red'),
-            (10, 'Red'),
-
-            (10, 'Red'),
-            (11, 'Red'),
-            (12, 'Red'),
-
-            ( 2, 'Yel'),
-            ( 3, 'Yel'),
-            ( 4, 'Yel'),
-            ( 5, 'Yel'),
-
-            ( 1, 'Blk'),
-            ( 2, 'Blk'),
-            ( 3, 'Blk'),
-            ( 4, 'Blk'),
-            ( 5, 'Blk'),
-            ( 6, 'Blk'),
-            ( 7, 'Blk'),
-
-            ( 4, 'Yel'),
-            ( 5, 'Yel'),
-            ( 6, 'Yel'),
-            ( 7, 'Yel'),
-
-            ( 9, 'Yel'),
-            (10, 'Yel'),
-            (11, 'Yel'),
-            (12, 'Yel'),
-
-            # More in Goodnotes pictures
-        ])
+        board = Board(
+            tiles=[
+                # Group 0
+                (5, "Red"),
+                (6, "Red"),
+                (7, "Red"),
+                # Group 1
+                (6, "Red"),
+                (6, "Blu"),
+                (6, "Yel"),
+                # Group 2
+                (1, "Red"),
+                (2, "Red"),
+                (3, "Red"),
+                (4, "Red"),
+                # Group 3
+                (7, "Red"),
+                (8, "Red"),
+                (9, "Red"),
+                (10, "Red"),
+                # Group 4
+                (10, "Red"),
+                (11, "Red"),
+                (12, "Red"),
+                # Group 5
+                (2, "Yel"),
+                (3, "Yel"),
+                (4, "Yel"),
+                (5, "Yel"),
+                # Group 6
+                (1, "Blk"),
+                (2, "Blk"),
+                (3, "Blk"),
+                (4, "Blk"),
+                (5, "Blk"),
+                (6, "Blk"),
+                (7, "Blk"),
+                # Group 7
+                (4, "Yel"),
+                (5, "Yel"),
+                (6, "Yel"),
+                (7, "Yel"),
+                # Group 8
+                (9, "Yel"),
+                (10, "Yel"),
+                (11, "Yel"),
+                (12, "Yel"),
+                # More in Goodnotes pictures
+            ]
+        )
 
         if False:
             board.simplify()
@@ -262,14 +269,15 @@ if __name__ == '__main__':
             board.grid.print()
         else:
             import time
+
             start = time.time()
             try:
                 res = board.solve()
                 res.print(suit_strings=True)
             except ExceptCantSolveTile:
-                print('cant solve it')
+                print("cant solve it")
             end = time.time()
-            print(f'Took {end-start}sec')
+            print(f"Took {end-start}sec")
 
     if False:
         tiles = []
@@ -281,67 +289,146 @@ if __name__ == '__main__':
         try:
             print(board.solve())
         except ExceptCantSolveTile:
-            print('cant solve it')
+            print("cant solve it")
 
     if True:
-        tiles=[
-            [6,'Blu'],[7,'Blu'],[8,'Blu'],
-            [7,'Blk'],[7,'Yel'],[7,'Red'],
-            [5,'Blu'],[6,'Blu'],[7,'Blu'],
-            [10,'Blu'],[11,'Blu'],[12,'Blu'],[13,'Blu'],
-            [9,'Red'],[10,'Red'],[11,'Red'],[12,'Red'],
-            [3,'Blk'],[4,'Blk'],[5,'Blk'],
-            [7,'Blk'],[8,'Blk'],[9,'Blk'],[10,'Blk'],[11,'Blk'],
-            [11,'Blk'],[12,'Blk'],[13,'Blk'],
-            [8,'Blk'],[8,'Blu'],[8,'Red'],
-            [13,'Blk'],[13,'Blu'],[13,'Red'],[13,'Yel'],
-            [3,'Red'],[4,'Red'],[5,'Red'],[6,'Red'],[7,'Red'],
-            [1,'Blk'],[1,'Yel'],[1,'Red'],
-            [4,'Blu'],[4,'Yel'],[4,'Red'],
-            [1,'Blk'],[1,'Blu'],[1,'Red'],
-            [5,'Blk'],[5,'Blu'],[5,'Yel'],
-            [2,'Blu'],[3,'Blu'],[4,'Blu'],
-            [10,'Blk'],[10,'Blu'],[10,'Red'],[10,'Yel'],
-            [6,'Yel'],[7,'Yel'],[8,'Yel'],[9,'Yel'],
-            [9,'Yel'],[10,'Yel'],[11,'Yel'],[12,'Yel'],[13,'Yel'],
-            [3,'Yel'],[4,'Yel'],[5,'Yel'],[6,'Yel'],
-            [12,'Blk'],[12,'Blu'],[12,'Red'],
-            [2,'Blu'],[2,'Red'],['J','Blk'],
-            [3,'Yel'],
+        tiles = [
+            # Group 0
+            [6, "Blu"],
+            [7, "Blu"],
+            [8, "Blu"],
+            # Group 1
+            [7, "Blk"],
+            [7, "Yel"],
+            [7, "Red"],
+            # Group 2
+            [5, "Blu"],
+            [6, "Blu"],
+            [7, "Blu"],
+            # Group 3
+            [10, "Blu"],
+            [11, "Blu"],
+            [12, "Blu"],
+            [13, "Blu"],
+            # Group 4
+            [9, "Red"],
+            [10, "Red"],
+            [11, "Red"],
+            [12, "Red"],
+            # Group 5
+            [3, "Blk"],
+            [4, "Blk"],
+            [5, "Blk"],
+            # Group 6
+            [7, "Blk"],
+            [8, "Blk"],
+            [9, "Blk"],
+            [10, "Blk"],
+            [11, "Blk"],
+            # Group 7
+            [11, "Blk"],
+            [12, "Blk"],
+            [13, "Blk"],
+            # Group 8
+            [8, "Blk"],
+            [8, "Blu"],
+            [8, "Red"],
+            # Group 9
+            [13, "Blk"],
+            [13, "Blu"],
+            [13, "Red"],
+            [13, "Yel"],
+            # Group 10
+            [3, "Red"],
+            [4, "Red"],
+            [5, "Red"],
+            [6, "Red"],
+            [7, "Red"],
+            # Group 11
+            [1, "Blk"],
+            [1, "Yel"],
+            [1, "Red"],
+            # Group 12
+            [4, "Blu"],
+            [4, "Yel"],
+            [4, "Red"],
+            # Group 13
+            [1, "Blk"],
+            [1, "Blu"],
+            [1, "Red"],
+            # Group 14
+            [5, "Blk"],
+            [5, "Blu"],
+            [5, "Yel"],
+            # Group 15
+            [2, "Blu"],
+            [3, "Blu"],
+            [4, "Blu"],
+            # Group 16
+            [10, "Blk"],
+            [10, "Blu"],
+            [10, "Red"],
+            [10, "Yel"],
+            # Group 17
+            [6, "Yel"],
+            [7, "Yel"],
+            [8, "Yel"],
+            [9, "Yel"],
+            # Group 18
+            [9, "Yel"],
+            [10, "Yel"],
+            [11, "Yel"],
+            [12, "Yel"],
+            [13, "Yel"],
+            # Group 19
+            [3, "Yel"],
+            [4, "Yel"],
+            [5, "Yel"],
+            [6, "Yel"],
+            # Group 20
+            [12, "Blk"],
+            [12, "Blu"],
+            [12, "Red"],
+            # Group 21
+            [2, "Blu"],
+            [2, "Red"],
+            ["J", "Blk"],
+            # Group 22
+            [3, "Yel"],
         ]
         # Numbers -> ranks
         for tile in tiles:
-            if tile[0] != 'J':
+            if tile[0] != "J":
                 tile[0] -= 1
-        
+
         # Test for each joker value
         jokers = []
         for tile in tiles:
-            if tile[0] == 'J':
+            if tile[0] == "J":
                 jokers.append(tile)
-        
+
         if len(jokers) == 0:
             board = Board(tiles=tiles)
             try:
                 print(board.solve())
             except board.ExceptCantSolveTile:
-                print('cant solve it')
+                print("cant solve it")
             except board.ExceptTooManyOfATile:
-                print('too many of a tile')
+                print("too many of a tile")
 
         if len(jokers) == 1:
             for rank in rules.ranks:
                 for suit in rules.suits:
                     jokers[0][0] = rank
                     jokers[0][1] = suit
-                    print(f'Trying jokers = {jokers}')
+                    print(f"Trying jokers = {jokers}")
                     board = Board(tiles=tiles)
                     try:
                         print(board.solve())
                     except board.ExceptCantSolveTile:
-                        print('cant solve it')
+                        print("cant solve it")
                     except board.ExceptTooManyOfATile:
-                        print('too many of a tile')
+                        print("too many of a tile")
 
         if len(jokers) == 2:
             for rankA in rules.ranks:
@@ -352,12 +439,11 @@ if __name__ == '__main__':
                             jokers[0][1] = suitA
                             jokers[1][0] = rankB
                             jokers[1][1] = suitB
-                            print(f'Trying jokers = {jokers}')
+                            print(f"Trying jokers = {jokers}")
                             board = Board(tiles=tiles)
                             try:
                                 print(board.solve())
                             except board.ExceptCantSolveTile:
-                                print('cant solve it')
+                                print("cant solve it")
                             except board.ExceptTooManyOfATile:
-                                print('too many of a tile')
-
+                                print("too many of a tile")
