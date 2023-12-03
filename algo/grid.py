@@ -10,7 +10,7 @@ class Grid:
         assert (tiles is not None) or (plan is not None)
         assert not ((tiles is not None) and (plan is not None))
 
-        self.matrix = np.zeros(shape=[len(rules.ranks), len(rules.suits)], dtype=int)
+        self.matrix = np.zeros(shape=[len(rules.ranks), rules.num_suits], dtype=int)
 
         if plan:
             tiles = []
@@ -19,11 +19,7 @@ class Grid:
                     tiles.append(tile)
 
         for tile in tiles:
-            if type(tile[1]) == str:
-                suit = rules.suitStringMap.index(tile[1])
-            else:
-                suit = tile[1]
-            rank = tile[0]
+            rank, suit = rules.label_to_rank_and_suit(tile)
             self.matrix[rank, suit] += 1
 
     def print(self, tabs=0):
@@ -47,7 +43,7 @@ class Grid:
                         matrix_rank = kernel_rank - 2 + rank
                         if matrix_rank < 0 or matrix_rank >= len(rules.ranks):
                             return False
-                    matrix_suit = (kernel_suit + suit) % len(rules.suits)
+                    matrix_suit = (kernel_suit + suit) % rules.num_suits
                     matrix_val = self.matrix[matrix_rank, matrix_suit]
                     if matrix_val < kernel_val:
                         return False
@@ -74,7 +70,7 @@ class Grid:
                             print("rank", rank)
                             print("suit", suit)
                             raise Exception("Going around the bend but shouldnt")
-                    matrix_suit = (kernel_suit + suit) % len(rules.suits)
+                    matrix_suit = (kernel_suit + suit) % rules.num_suits
                     group.append((matrix_rank, matrix_suit))
                     new_matrix[matrix_rank, matrix_suit] -= 1
         option = {
@@ -144,13 +140,13 @@ class Grid:
 def test_check_kernels_match():
     g = Grid(
         tiles=[
-            (1, 0),
-            (2, 0),
-            (3, 0),
-            (6, 0),
-            (6, 1),
-            (6, 2),
-            (12, "🟨"),
+            "🟥 2",
+            "🟥 3",
+            "🟥 4",
+            "🟥 7",
+            "🟫 7",
+            "🟦 7",
+            "🟨 12",
         ]
     )
     assert g.check_kernels_match([2], 1, 0)  # 1 and [0,+1,+2]

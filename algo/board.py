@@ -75,57 +75,59 @@ class Board:
             # print('\nboard')
             # print(self.plan)
             # print(self.grid.matrix)
-            for rank, suit in [(r, s) for r in rules.ranks for s in rules.suits]:
-                # For each tile
-                print(f"tile=({rank},{suit})") if verbose else None
-                tiles_unplaced = self.grid.matrix[rank, suit]
-                if tiles_unplaced == 0:
-                    continue
-                elif tiles_unplaced < 0:
-                    raise Exception("Gone into negative")
-                elif tiles_unplaced > 2:
-                    # TODO This is incorrect for when using the joker
-                    raise self.ExceptTooManyOfATile
+            for rank in rules.ranks:
+                for suit in range(rules.num_suits):
+                    # For each tile
+                    print(f"tile=({rank},{suit})") if verbose else None
+                    tiles_unplaced = self.grid.matrix[rank, suit]
+                    if tiles_unplaced == 0:
+                        continue
+                    elif tiles_unplaced < 0:
+                        raise Exception("Gone into negative")
+                    elif tiles_unplaced > 2:
+                        # TODO This is incorrect for when using the joker
+                        tile = rules.rank_and_suit_to_label(rank, suit)
+                        raise self.ExceptTooManyOfATile(f"{rank=}, {suit=}, {tile=}")
 
-                moves = self.find_tile_moves(rank, suit, verbose=verbose)
+                    moves = self.find_tile_moves(rank, suit, verbose=verbose)
 
-                if len(moves) == 0:
-                    raise self.ExceptCantSolveTile
-                elif len(moves) == tiles_unplaced:
-                    # All moves must be true
-                    if verbose:
-                        print("\t\t" + f"enacting moves on ({rank}, {suit})")
-                    for move in moves:
-                        # Enact move
-                        if move["type"] == "new_group":
-                            if verbose:
-                                print("\t\t\t" + "doing add to group move")
-                            data = json.loads(move["new_board_data"])
-                            self.grid.matrix = np.array(data["spare_grid"], dtype=int)
-                            self.plan.p = data["plan"]
-                        elif move["type"] == "add_to_group":
-                            if verbose:
-                                print("\t\t\t" + "doing add to group move")
-                            data = json.loads(move["new_board_data"])
-                            self.grid.matrix = np.array(data["spare_grid"], dtype=int)
-                            self.plan.p = data["plan"]
-                        else:
-                            raise Exception("Bad move type")
-
+                    if len(moves) == 0:
+                        raise self.ExceptCantSolveTile
+                    elif len(moves) == tiles_unplaced:
+                        # All moves must be true
                         if verbose:
-                            print("\t\t\t" + "new board")
-                            self.print(tabs=4)
+                            print("\t\t" + f"enacting moves on ({rank}, {suit})")
+                        for move in moves:
+                            # Enact move
+                            if move["type"] == "new_group":
+                                if verbose:
+                                    print("\t\t\t" + "doing add to group move")
+                                data = json.loads(move["new_board_data"])
+                                self.grid.matrix = np.array(data["spare_grid"], dtype=int)
+                                self.plan.p = data["plan"]
+                            elif move["type"] == "add_to_group":
+                                if verbose:
+                                    print("\t\t\t" + "doing add to group move")
+                                data = json.loads(move["new_board_data"])
+                                self.grid.matrix = np.array(data["spare_grid"], dtype=int)
+                                self.plan.p = data["plan"]
+                            else:
+                                raise Exception("Bad move type")
 
-                    fresh_changes = True
+                            if verbose:
+                                print("\t\t\t" + "new board")
+                                self.print(tabs=4)
+
+                        fresh_changes = True
 
             print("\t" + "simplifying loopback") if verbose else None
         print("Done simplifying") if verbose else None
 
     def find_board_choice(self, verbose=False):
-        tile_moves = np.zeros(shape=[len(rules.ranks), len(rules.suits)], dtype=list)
-        tile_moves_len = np.zeros(shape=[len(rules.ranks), len(rules.suits)], dtype=int)
+        tile_moves = np.zeros(shape=[len(rules.ranks), rules.num_suits], dtype=list)
+        tile_moves_len = np.zeros(shape=[len(rules.ranks), rules.num_suits], dtype=int)
         for rank in rules.ranks:
-            for suit in rules.suits:
+            for suit in range(rules.num_suits):
                 if self.grid.matrix[rank, suit] > 0:
                     moves = self.find_tile_moves(rank, suit, verbose=False)
                     tile_moves[rank, suit] = moves
@@ -180,10 +182,10 @@ if __name__ == "__main__":
     if False:
         board = Board(
             tiles=[
-                (6, "⬛️"),
-                (7, "⬛️"),
-                (8, "⬛️"),
-                (9, "⬛️"),
+                "🟫 6",
+                "🟫 7",
+                "🟫 8",
+                "🟫 9",
             ]
         )
         print(board.solve())
@@ -191,18 +193,18 @@ if __name__ == "__main__":
     if False:
         board = Board(
             tiles=[
-                (6, "🟥"),
-                (6, "⬛️"),
-                (6, "🟦"),
-                (6, "🟨"),
-                (7, "🟥"),
-                (7, "🟨"),
-                (8, "🟥"),
-                (8, "🟨"),
-                (9, "🟥"),
-                (9, "⬛️"),
-                (9, "🟦"),
-                (9, "🟨"),
+                "🟥 6",
+                "🟫 6",
+                "🟦 6",
+                "🟨 6",
+                "🟥 7",
+                "🟨 7",
+                "🟥 8",
+                "🟨 8",
+                "🟥 9",
+                "🟫 9",
+                "🟦 9",
+                "🟨 9",
                 # (12,'🟨'),
             ]
         )
@@ -215,50 +217,50 @@ if __name__ == "__main__":
         board = Board(
             tiles=[
                 # Group 0
-                (5, "🟥"),
-                (6, "🟥"),
-                (7, "🟥"),
+                "🟥 5",
+                "🟥 6",
+                "🟥 7",
                 # Group 1
-                (6, "🟥"),
-                (6, "🟦"),
-                (6, "🟨"),
+                "🟥 6",
+                "🟦 6",
+                "🟨 6",
                 # Group 2
-                (1, "🟥"),
-                (2, "🟥"),
-                (3, "🟥"),
-                (4, "🟥"),
+                "🟥 1",
+                "🟥 2",
+                "🟥 3",
+                "🟥 4",
                 # Group 3
-                (7, "🟥"),
-                (8, "🟥"),
-                (9, "🟥"),
-                (10, "🟥"),
+                "🟥 7",
+                "🟥 8",
+                "🟥 9",
+                "🟥 10",
                 # Group 4
-                (10, "🟥"),
-                (11, "🟥"),
-                (12, "🟥"),
+                "🟥 10",
+                "🟥 11",
+                "🟥 12",
                 # Group 5
-                (2, "🟨"),
-                (3, "🟨"),
-                (4, "🟨"),
-                (5, "🟨"),
+                "🟨 2",
+                "🟨 3",
+                "🟨 4",
+                "🟨 5",
                 # Group 6
-                (1, "⬛️"),
-                (2, "⬛️"),
-                (3, "⬛️"),
-                (4, "⬛️"),
-                (5, "⬛️"),
-                (6, "⬛️"),
-                (7, "⬛️"),
+                "🟫 1",
+                "🟫 2",
+                "🟫 3",
+                "🟫 4",
+                "🟫 5",
+                "🟫 6",
+                "🟫 7",
                 # Group 7
-                (4, "🟨"),
-                (5, "🟨"),
-                (6, "🟨"),
-                (7, "🟨"),
+                "🟨 4",
+                "🟨 5",
+                "🟨 6",
+                "🟨 7",
                 # Group 8
-                (9, "🟨"),
-                (10, "🟨"),
-                (11, "🟨"),
-                (12, "🟨"),
+                "🟨 9",
+                "🟨 10",
+                "🟨 11",
+                "🟨 12",
                 # More in Goodnotes pictures
             ]
         )
@@ -294,118 +296,117 @@ if __name__ == "__main__":
     if True:
         tiles = [
             # Group 0
-            [6, "🟦"],
-            [7, "🟦"],
-            [8, "🟦"],
+            "🟦 6",
+            "🟦 7",
+            "🟦 8",
             # Group 1
-            [7, "⬛️"],
-            [7, "🟨"],
-            [7, "🟥"],
+            "🟫 7",
+            "🟨 7",
+            "🟥 7",
             # Group 2
-            [5, "🟦"],
-            [6, "🟦"],
-            [7, "🟦"],
+            "🟦 5",
+            "🟦 6",
+            "🟦 7",
             # Group 3
-            [10, "🟦"],
-            [11, "🟦"],
-            [12, "🟦"],
-            [13, "🟦"],
+            "🟦 10",
+            "🟦 11",
+            "🟦 12",
+            "🟦 13",
             # Group 4
-            [9, "🟥"],
-            [10, "🟥"],
-            [11, "🟥"],
-            [12, "🟥"],
+            "🟥 9",
+            "🟥 10",
+            "🟥 11",
+            "🟥 12",
             # Group 5
-            [3, "⬛️"],
-            [4, "⬛️"],
-            [5, "⬛️"],
+            "🟫 3",
+            "🟫 4",
+            "🟫 5",
             # Group 6
-            [7, "⬛️"],
-            [8, "⬛️"],
-            [9, "⬛️"],
-            [10, "⬛️"],
-            [11, "⬛️"],
+            "🟫 7",
+            "🟫 8",
+            "🟫 9",
+            "🟫 10",
+            "🟫 11",
             # Group 7
-            [11, "⬛️"],
-            [12, "⬛️"],
-            [13, "⬛️"],
+            "🟫 11",
+            "🟫 12",
+            "🟫 13",
             # Group 8
-            [8, "⬛️"],
-            [8, "🟦"],
-            [8, "🟥"],
+            "🟫 8",
+            "🟦 8",
+            "🟥 8",
             # Group 9
-            [13, "⬛️"],
-            [13, "🟦"],
-            [13, "🟥"],
-            [13, "🟨"],
+            "🟫 13",
+            "🟦 13",
+            "🟥 13",
+            "🟨 13",
             # Group 10
-            [3, "🟥"],
-            [4, "🟥"],
-            [5, "🟥"],
-            [6, "🟥"],
-            [7, "🟥"],
+            "🟥 3",
+            "🟥 4",
+            "🟥 5",
+            "🟥 6",
+            "🟥 7",
             # Group 11
-            [1, "⬛️"],
-            [1, "🟨"],
-            [1, "🟥"],
+            "🟫 1",
+            "🟨 1",
+            "🟥 1",
             # Group 12
-            [4, "🟦"],
-            [4, "🟨"],
-            [4, "🟥"],
+            "🟦 4",
+            "🟨 4",
+            "🟥 4",
             # Group 13
-            [1, "⬛️"],
-            [1, "🟦"],
-            [1, "🟥"],
+            "🟫 1",
+            "🟦 1",
+            "🟥 1",
             # Group 14
-            [5, "⬛️"],
-            [5, "🟦"],
-            [5, "🟨"],
+            "🟫 5",
+            "🟦 5",
+            "🟨 5",
             # Group 15
-            [2, "🟦"],
-            [3, "🟦"],
-            [4, "🟦"],
+            "🟦 2",
+            "🟦 3",
+            "🟦 4",
             # Group 16
-            [10, "⬛️"],
-            [10, "🟦"],
-            [10, "🟥"],
-            [10, "🟨"],
+            "🟫 10",
+            "🟦 10",
+            "🟥 10",
+            "🟨 10",
             # Group 17
-            [6, "🟨"],
-            [7, "🟨"],
-            [8, "🟨"],
-            [9, "🟨"],
+            "🟨 6",
+            "🟨 7",
+            "🟨 8",
+            "🟨 9",
             # Group 18
-            [9, "🟨"],
-            [10, "🟨"],
-            [11, "🟨"],
-            [12, "🟨"],
-            [13, "🟨"],
+            "🟨 9",
+            "🟨 10",
+            "🟨 11",
+            "🟨 12",
+            "🟨 13",
             # Group 19
-            [3, "🟨"],
-            [4, "🟨"],
-            [5, "🟨"],
-            [6, "🟨"],
+            "🟨 3",
+            "🟨 4",
+            "🟨 5",
+            "🟨 6",
             # Group 20
-            [12, "⬛️"],
-            [12, "🟦"],
-            [12, "🟥"],
+            "🟫 12",
+            "🟦 12",
+            "🟥 12",
             # Group 21
-            [2, "🟦"],
-            [2, "🟥"],
-            ["J", "⬛️"],
+            "🟦 2",
+            "🟥 2",
+            "🟫 J",
             # Group 22
-            [3, "🟨"],
+            "🟨 3",
         ]
-        # Numbers -> ranks
-        for tile in tiles:
-            if tile[0] != "J":
-                tile[0] -= 1
 
         # Test for each joker value
         jokers = []
+        normals = []
         for tile in tiles:
-            if tile[0] == "J":
+            if tile.endswith("J"):
                 jokers.append(tile)
+            else:
+                normals.append(tile)
 
         if len(jokers) == 0:
             board = Board(tiles=tiles)
@@ -418,11 +419,10 @@ if __name__ == "__main__":
 
         if len(jokers) == 1:
             for rank in rules.ranks:
-                for suit in rules.suits:
-                    jokers[0][0] = rank
-                    jokers[0][1] = suit
-                    print(f"Trying jokers = {jokers}")
-                    board = Board(tiles=tiles)
+                for suit in range(rules.num_suits):
+                    joker = rules.rank_and_suit_to_label(rank,suit)
+                    print(f"Trying joker = {joker}")
+                    board = Board(tiles=[*normals, joker])
                     try:
                         print(board.solve())
                     except board.ExceptCantSolveTile:
@@ -435,12 +435,10 @@ if __name__ == "__main__":
                 for suitA in rules.ranks:
                     for rankB in rules.ranks:
                         for suitB in rules.ranks:
-                            jokers[0][0] = rankA
-                            jokers[0][1] = suitA
-                            jokers[1][0] = rankB
-                            jokers[1][1] = suitB
-                            print(f"Trying jokers = {jokers}")
-                            board = Board(tiles=tiles)
+                            jokerA = rules.rank_and_suit_to_label(rankA, suitA)
+                            jokerB = rules.rank_and_suit_to_label(rankB, suitB)
+                            print(f"Trying jokers = {(jokerA, jokerB)}")
+                            board = Board(tiles=[*normals, jokerA, jokerB])
                             try:
                                 print(board.solve())
                             except board.ExceptCantSolveTile:

@@ -12,14 +12,10 @@ class Plan:
         for group in p_in:
             self.p.append([])
             for tile in group:
-                num = tile[0]
-                if type(tile[1]) == str:
-                    suit = rules.suitStringMap.index(tile[1])
-                else:
-                    suit = int(tile[1])
-                self.p[-1].append((num, suit))
+                rank, suit = rules.label_to_rank_and_suit(tile)
+                self.p[-1].append((rank, suit))
 
-    def print(self, tabs=0, suit_strings=False):
+    def print(self, tabs=0, suit_strings=True):
         indent = "\t" * tabs
         s = indent + "["
         for i, group in enumerate(self.p):
@@ -27,11 +23,10 @@ class Plan:
                 s = s + ",\n" + indent + " "
             s = s + "["
             for j, tile in enumerate(group):
-                # s = s + f'({tile[0]:>2}, {rules.suitStringMap[tile[1]]})'
                 if suit_strings:
-                    s = s + f"({tile[0]:>2}, {rules.suitStringMap[tile[1]]})"
+                    s = s + rules.rank_and_suit_to_label(tile[0], tile[1])
                 else:
-                    s = s + f"({tile[0]:>2}, {tile[1]})"
+                    s = s + f"( {tile[0]:>2}, {tile[1]})"
                 if j < len(group) - 1:
                     s = s + ", "
             s = s + "]"
@@ -114,38 +109,38 @@ def test_plan_class():
         assert Plan(p).is_valid() == is_valid, error_msg
 
     assert (
-        Plan([[(6, "🟥"), (7, "🟥"), (8, "🟥")]]).is_valid() == True
+        Plan([["🟥 6", "🟥 7", "🟥 8"]]).is_valid() == True
     ), "Does not work for normal group of ranks"
     assert (
-        Plan([[(10, "🟦"), (10, "🟥"), (10, "⬛️")]]).is_valid() == True
+        Plan([["🟦 10", "🟥 10", "🟫 10"]]).is_valid() == True
     ), "Does not work for normal group of suits"
     assert (
-        Plan([[(6, "🟥"), (7, "🟥"), (9, "🟥")]]).is_valid() == False
+        Plan([["🟥 6", "🟥 7", "🟥 9"]]).is_valid() == False
     ), "Does not catch gap in group of ranks"
     assert (
-        Plan([[(6, "🟥"), (7, "🟥"), (8, "🟦")]]).is_valid() == False
+        Plan([["🟥 6", "🟥 7", "🟦 8"]]).is_valid() == False
     ), "Does not catch group with multiple ranks and multiple suits"
     assert (
-        Plan([[(6, "🟥"), (6, "🟥"), (7, "🟥")]]).is_valid() == False
+        Plan([["🟥 6", "🟥 6", "🟥 7"]]).is_valid() == False
     ), "Does not catch rank group with double ups"
     assert (
-        Plan([[(10, "🟥"), (10, "🟥"), (10, "⬛️")]]).is_valid() == False
+        Plan([["🟥 10", "🟥 10", "🟫 10"]]).is_valid() == False
     ), "Does not catch suit group with double ups"
     assert (
-        Plan([[(10, "🟥"), (10, "⬛️")]]).is_valid() == False
+        Plan([["🟥 10", "🟫 10"]]).is_valid() == False
     ), "Does not catch suit group with two tiles"
     assert (
-        Plan([[(6, "🟥"), (7, "🟥")]]).is_valid() == False
+        Plan([["🟥 6", "🟥 7"]]).is_valid() == False
     ), "Does not catch rank group with two tiles"
     assert (
-        Plan([[(num, "🟥") for num in rules.ranks]]).is_valid() == True
+        Plan([[rules.rank_and_suit_to_label(rank,0) for rank in rules.ranks]]).is_valid() == True
     ), "Does not allow large rank group"
 
     assert (
         Plan(
             [
-                [(6, "🟥"), (7, "🟥"), (8, "🟥")],
-                [(10, "🟦"), (10, "🟥"), (10, "⬛️"), (10, "🟨")],
+                ["🟥 6", "🟥 7", "🟥 8"],
+                ["🟦 10", "🟥 10", "🟫 10", "🟨 10"],
             ]
         ).is_valid()
         == True
@@ -154,8 +149,8 @@ def test_plan_class():
     assert (
         Plan(
             [
-                [(6, "🟥"), (7, "🟥"), (8, "🟥")],
-                [(10, "🟥"), (10, "🟥")],
+                ["🟥 6", "🟥 7", "🟥 8"],
+                ["🟥 10", "🟥 10"],
             ]
         ).is_valid()
         == False
@@ -169,8 +164,8 @@ if __name__ == "__main__":
 
     p = Plan(
         [
-            [(6, "🟥"), (7, "🟥"), (8, "🟥")],
-            [(10, "🟦"), (10, "🟥"), (10, "⬛️"), (10, "🟨")],
+            ["🟥 6", "🟥 7", "🟥 8"],
+            ["🟦 10", "🟥 10", "🟫 10", "🟨 10"],
         ]
     )
     print(p)
