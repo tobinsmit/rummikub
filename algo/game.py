@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import copy, time
 import numpy as np
 from board import Board
@@ -41,9 +43,9 @@ class Game():
     def place_most_tiles(self):
         turn_options = self.get_turn_options()
         turn_option_scores = np.zeros(shape=len(turn_options), dtype=int)
-        for i, to in enumerate(turn_options):
+        for i, option in enumerate(turn_options):
             hand_leftover : list = copy.deepcopy(self.hand_tiles)
-            for tile in to[0]:
+            for tile in option[0]:
                 hand_leftover.remove(tile)
             score = 0
             for tile in hand_leftover:
@@ -59,51 +61,52 @@ class Game():
 
 
 if __name__ == '__main__':
-    game = Game(board_tiles=[
-        ( 5, 'Red'),
-        ( 6, 'Red'),
-        ( 7, 'Red'),
+    game = Game(
+        board_tiles=[
+            ( 5, 'Red'),
+            ( 6, 'Red'),
+            ( 7, 'Red'),
 
-        ( 6, 'Red'),
-        ( 6, 'Blu'),
-        ( 6, 'Yel'),
+            ( 6, 'Red'),
+            ( 6, 'Blu'),
+            ( 6, 'Yel'),
 
-        ( 1, 'Red'),
-        ( 2, 'Red'),
-        ( 3, 'Red'),
-        ( 4, 'Red'),
+            ( 1, 'Red'),
+            ( 2, 'Red'),
+            ( 3, 'Red'),
+            ( 4, 'Red'),
 
-        ( 7, 'Red'),
-        ( 8, 'Red'),
-        ( 9, 'Red'),
-        (10, 'Red'),
+            ( 7, 'Red'),
+            ( 8, 'Red'),
+            ( 9, 'Red'),
+            (10, 'Red'),
 
-        (10, 'Red'),
-        (11, 'Red'),
-        (12, 'Red'),
+            (10, 'Red'),
+            (11, 'Red'),
+            (12, 'Red'),
 
-        ( 2, 'Yel'),
-        ( 3, 'Yel'),
-        ( 4, 'Yel'),
-        ( 5, 'Yel'),
+            ( 2, 'Yel'),
+            ( 3, 'Yel'),
+            ( 4, 'Yel'),
+            ( 5, 'Yel'),
 
-        ( 1, 'Blk'),
-        ( 2, 'Blk'),
-        ( 3, 'Blk'),
-        ( 4, 'Blk'),
-        ( 5, 'Blk'),
-        ( 6, 'Blk'),
-        ( 7, 'Blk'),
+            ( 1, 'Blk'),
+            ( 2, 'Blk'),
+            ( 3, 'Blk'),
+            ( 4, 'Blk'),
+            ( 5, 'Blk'),
+            ( 6, 'Blk'),
+            ( 7, 'Blk'),
 
-        ( 4, 'Yel'),
-        ( 5, 'Yel'),
-        ( 6, 'Yel'),
-        ( 7, 'Yel'),
+            ( 4, 'Yel'),
+            ( 5, 'Yel'),
+            ( 6, 'Yel'),
+            ( 7, 'Yel'),
 
-        ( 9, 'Yel'),
-        (10, 'Yel'),
-        (11, 'Yel'),
-        (12, 'Yel'),
+            ( 9, 'Yel'),
+            (10, 'Yel'),
+            (11, 'Yel'),
+            (12, 'Yel'),
         ], 
         hand_tiles=[
             ( 7, 'Yel'),
@@ -116,5 +119,5 @@ if __name__ == '__main__':
             ( 9, 'Blu'),
         ])
     
-    to = game.place_most_tiles()
-    print(to)
+    result = game.place_most_tiles()
+    print(result)

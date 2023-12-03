@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import numpy as np
 import copy
 import rules
@@ -16,24 +18,7 @@ class Plan():
                     suit = int(tile[1])
                 self.p[-1].append((num, suit))
 
-
-    def __str__(self):
-        # return str(self.p)
-        s = '['
-        for i, group in enumerate(self.p):
-            if i:
-                s = s + ',\n '
-            s = s + '['
-            for j, tile in enumerate(group):
-                s = s + f'({tile[0]:>2}, {rules.suitStringMap[tile[1]]})'
-                if j < len(group)-1:
-                    s = s + ', '
-            s = s + ']'
-        s = s + ']'
-        return s
-
     def print(self, tabs=0, suit_strings=False):
-        # return str(self.p)
         indent = '\t'*tabs
         s = indent +'['
         for i, group in enumerate(self.p):
@@ -50,7 +35,13 @@ class Plan():
                     s = s + ', '
             s = s + ']'
         s = s + ']'
-        print(s)
+        return s
+
+    def __str__(self):
+        return self.print()
+
+    # def __repr__(self):
+    #     return self.print()
 
     def is_valid(self, verbose=False):
         for group in self.p:
@@ -95,19 +86,20 @@ class Plan():
         return True
 
     def find_tile_add_to_group_moves(self, rank, suit):
+        """Given a tile, find moves adding it to a group"""
         options = []
         for group in self.p:
             new_group = [*group, (rank, suit)]
             res = Plan.is_group_valid(new_group)
             if res:
-                new_p = copy.deepcopy(self.p)
-                i = new_p.index(group)
-                new_p[i] = new_group
+                new_plan = copy.deepcopy(self.p)
+                i = new_plan.index(group)
+                new_plan[i] = new_group
                 option = {
                     'type': 'add_to_group',
                     'old_group': group,
                     'new_group': new_group,
-                    'new_plan': new_p,
+                    'new_plan': new_plan,
                     'rank': rank,
                     'suit': suit,
                 }

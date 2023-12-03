@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import copy
 import numpy as np
 import rules
@@ -31,6 +33,7 @@ class Grid():
             print(f'{indent}{rules.ranks[i]:3} {row}')
 
     def check_kernels_match(self, kernel_indexes, rank, suit):
+        """Check if kernals match on a given tile"""
         assert iter(kernel_indexes), 'kernel_indexes not iterable'
         kernel = np.sum([self.kernels[k] for k in kernel_indexes], 0)
         for kernel_rank in range(len(kernel)):
@@ -49,7 +52,6 @@ class Grid():
                         return False
         
         return True
-
 
     def kernel_to_group_option(self, kernel_idx, rank, suit):
         assert type(kernel_idx) is not list
@@ -146,9 +148,9 @@ def test_check_kernels_match():
         (6,2),
         (12,'Yel'),
     ])
-    assert g.check_kernels_match([2], 1, 0) # 1 and higher
-    assert g.check_kernels_match([1], 2, 0) # 2 and sides
-    assert g.check_kernels_match([0], 3, 0) # 3 and lower
+    assert g.check_kernels_match([2], 1, 0) # 1 and [0,+1,+2]
+    assert g.check_kernels_match([1], 2, 0) # 2 and [-1,0,+1]
+    assert g.check_kernels_match([0], 3, 0) # 3 and [-2,-1,0]
     assert not g.check_kernels_match([0], 1, 0)
     assert not g.check_kernels_match([1], 1, 0)
     assert not g.check_kernels_match([3], 1, 0)
