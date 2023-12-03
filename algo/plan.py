@@ -114,38 +114,38 @@ def test_plan_class():
         assert Plan(p).is_valid() == is_valid, error_msg
 
     assert (
-        Plan([[(6, "Red"), (7, "Red"), (8, "Red")]]).is_valid() == True
+        Plan([[(6, "🟥"), (7, "🟥"), (8, "🟥")]]).is_valid() == True
     ), "Does not work for normal group of ranks"
     assert (
-        Plan([[(10, "Blu"), (10, "Red"), (10, "Blk")]]).is_valid() == True
+        Plan([[(10, "🟦"), (10, "🟥"), (10, "⬛️")]]).is_valid() == True
     ), "Does not work for normal group of suits"
     assert (
-        Plan([[(6, "Red"), (7, "Red"), (9, "Red")]]).is_valid() == False
+        Plan([[(6, "🟥"), (7, "🟥"), (9, "🟥")]]).is_valid() == False
     ), "Does not catch gap in group of ranks"
     assert (
-        Plan([[(6, "Red"), (7, "Red"), (8, "Blu")]]).is_valid() == False
+        Plan([[(6, "🟥"), (7, "🟥"), (8, "🟦")]]).is_valid() == False
     ), "Does not catch group with multiple ranks and multiple suits"
     assert (
-        Plan([[(6, "Red"), (6, "Red"), (7, "Red")]]).is_valid() == False
+        Plan([[(6, "🟥"), (6, "🟥"), (7, "🟥")]]).is_valid() == False
     ), "Does not catch rank group with double ups"
     assert (
-        Plan([[(10, "Red"), (10, "Red"), (10, "Blk")]]).is_valid() == False
+        Plan([[(10, "🟥"), (10, "🟥"), (10, "⬛️")]]).is_valid() == False
     ), "Does not catch suit group with double ups"
     assert (
-        Plan([[(10, "Red"), (10, "Blk")]]).is_valid() == False
+        Plan([[(10, "🟥"), (10, "⬛️")]]).is_valid() == False
     ), "Does not catch suit group with two tiles"
     assert (
-        Plan([[(6, "Red"), (7, "Red")]]).is_valid() == False
+        Plan([[(6, "🟥"), (7, "🟥")]]).is_valid() == False
     ), "Does not catch rank group with two tiles"
     assert (
-        Plan([[(num, "Red") for num in rules.ranks]]).is_valid() == True
+        Plan([[(num, "🟥") for num in rules.ranks]]).is_valid() == True
     ), "Does not allow large rank group"
 
     assert (
         Plan(
             [
-                [(6, "Red"), (7, "Red"), (8, "Red")],
-                [(10, "Blu"), (10, "Red"), (10, "Blk"), (10, "Yel")],
+                [(6, "🟥"), (7, "🟥"), (8, "🟥")],
+                [(10, "🟦"), (10, "🟥"), (10, "⬛️"), (10, "🟨")],
             ]
         ).is_valid()
         == True
@@ -154,8 +154,8 @@ def test_plan_class():
     assert (
         Plan(
             [
-                [(6, "Red"), (7, "Red"), (8, "Red")],
-                [(10, "Red"), (10, "Red")],
+                [(6, "🟥"), (7, "🟥"), (8, "🟥")],
+                [(10, "🟥"), (10, "🟥")],
             ]
         ).is_valid()
         == False
@@ -169,8 +169,8 @@ if __name__ == "__main__":
 
     p = Plan(
         [
-            [(6, "Red"), (7, "Red"), (8, "Red")],
-            [(10, "Blu"), (10, "Red"), (10, "Blk"), (10, "Yel")],
+            [(6, "🟥"), (7, "🟥"), (8, "🟥")],
+            [(10, "🟦"), (10, "🟥"), (10, "⬛️"), (10, "🟨")],
         ]
     )
     print(p)

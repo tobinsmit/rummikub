@@ -150,7 +150,7 @@ def test_check_kernels_match():
             (6, 0),
             (6, 1),
             (6, 2),
-            (12, "Yel"),
+            (12, "🟨"),
         ]
     )
     assert g.check_kernels_match([2], 1, 0)  # 1 and [0,+1,+2]
