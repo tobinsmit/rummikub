@@ -1,0 +1,8 @@
+Train a custom object detection model using your data https://www.youtube.com/watch?v=-ZyFYniGUsw
+Model Maker Object Detection for Android Figurine https://colab.research.google.com/github/khanhlvg/tflite_raspberry_pi/blob/main/object_detection/Train_custom_model_tutorial.ipynb#scrollTo=_MClfpsJAfda&uniqifier=4
+tflite_raspberry_pi https://github.com/khanhlvg/tflite_raspberry_pi/blob/main/object_detection/Train_custom_model_tutorial.ipynb
+Choose an object detection model architecture for Raspberry Pi https://www.youtube.com/watch?v=twtBcfonSyE
+labelImg https://github.com/heartexlabs/labelImg
+
+
+
